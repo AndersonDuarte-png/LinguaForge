@@ -406,8 +406,18 @@ A prioridade atual é concluir a V1 textual.
 Decisões e validações já realizadas:
 
 - o contrato textual usa `TutorRequest` e `TutorResponse`, sem acoplamento a LLM;
-- o candidato inicial é `Qwen3-4B-Instruct-2507` em `Q4_K_M`, executado com `llama.cpp`;
-- avaliações locais iniciais confirmaram a viabilidade do candidato para a V1;
+- o modelo selecionado para a V1 é `Qwen3-4B-Instruct-2507` em `Q4_K_M`, executado com `llama.cpp`;
+- avaliações locais iniciais confirmaram a viabilidade do modelo para a V1, inclusive em CPU;
+- uma avaliação em CPU com 10 cenários casuais originais obteve 10 contratos válidos e 10 correções esperadas; ela cobriu apresentações, trabalho, convites, combinações, viagem, pedidos de esclarecimento, sentimentos e hobbies;
+- o backend oficial CUDA 12.8 do `llama.cpp` (b10978) foi baixado e o binário foi verificado por SHA-256;
+- o runtime local do backend está em `data/llama.cpp/b10978/cuda12.8/runtime`; ao iniciar o `llama-server` manualmente, expô-lo por `LD_LIBRARY_PATH` em vez de instalar um CUDA toolkit global;
+- o paliativo de inicialização é `scripts/start_llama_server.sh`: ele limita `LD_LIBRARY_PATH` ao processo do `llama-server`, usa o modelo local já existente e solicita `--gpu-layers 999`; não altera variáveis globais, instala dependências ou baixa modelos;
+- após reiniciar, o carregamento persistente de `nvidia_uvm` foi confirmado pelo `systemd-modules-load`; o `llama-server --list-devices` no terminal nativo detectou a CUDA0. O ambiente integrado pode não expor CUDA ao processo que ele inicia, portanto a execução do servidor deve ocorrer pelo terminal nativo;
+- em 17/09/2026, `nvidia-smi`, `libcuda` e NVML foram confirmados no ambiente (RTX 4060 Laptop, 8188 MiB). A primeira tentativa CUDA falhou porque `nvidia_uvm` não estava carregado; após `sudo modprobe nvidia_uvm`, `cuInit`, o runtime CUDA 12.8 e `llama-server --list-devices` passaram a detectar a GPU;
+- a validação CUDA do backend oficial `llama.cpp` b10978, com o runtime CUDA 12.8 fornecido no pacote e `--gpu-layers 999`, foi bem-sucedida: 37/37 camadas foram offloaded para a GPU, sem fallback para CPU. A VRAM foi de 1 MiB inicialmente a 3153 MiB de pico; o modelo usou 2375,91 MiB, o KV cache 576 MiB e o buffer de cálculo 79,01 MiB;
+- uma chamada real via `LlamaCppTutor` foi válida na GPU: prompt a 1601,81 tokens/s e geração a 66,78 tokens/s (86 tokens). A resposta corrigiu "Yesterday I go to school and meet my friends." para "Yesterday I went to school and met my friends.";
+- `LlamaCppTutor` usa a API HTTP de um `llama-server` local já iniciado, sem gerenciar downloads ou o processo do servidor;
+- se a resposta não passa na validação, o tutor faz uma única nova tentativa com instrução reforçada e então retorna uma falha controlada;
 - respostas do modelo passam por validação determinística: os três campos devem estar preenchidos e o texto corrigido deve permanecer relacionado à mensagem do aluno;
 - a validação é uma proteção adicional contra respostas desviadas por instruções na entrada e não substitui a avaliação de qualidade gramatical e pedagógica.
 
@@ -415,10 +425,7 @@ Próximos marcos devem seguir esta ordem geral:
 
 1. definir e testar o contrato funcional do tutor textual;
 2. manter esse contrato independente de um LLM específico;
-3. integrar o candidato aprovado ao tutor por meio de um adaptador local;
-4. definir o tratamento de uma resposta que não passa na validação;
-5. validar correção, explicação em português e continuidade da conversa;
-6. somente depois considerar interface mais elaborada.
+3. somente depois considerar interface mais elaborada.
 
 Áudio permanece fora do escopo da V1.
 
