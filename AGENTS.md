@@ -109,7 +109,7 @@ Fluxo principal:
 - o tutor identifica e corrige erros;
 - o tutor fornece uma versão corrigida;
 - o tutor explica os erros em português;
-- o tutor continua a conversa em inglês.
+- o tutor pode continuar a conversa em inglês; `Enable Reply` controla essa continuação.
 
 Objetivo da V1:
 
@@ -406,6 +406,7 @@ A prioridade atual é concluir a V1 textual.
 Decisões e validações já realizadas:
 
 - o contrato textual usa `TutorRequest` e `TutorResponse`, sem acoplamento a LLM;
+- os controles, rótulos e mensagens da interface da V1 serão em inglês; a explicação pedagógica do tutor permanece em português brasileiro (`explanation_pt`), conforme o contrato textual;
 - o modelo selecionado para a V1 é `Qwen3-4B-Instruct-2507` em `Q4_K_M`, executado com `llama.cpp`;
 - avaliações locais iniciais confirmaram a viabilidade do modelo para a V1, inclusive em CPU;
 - uma avaliação em CPU com 10 cenários casuais originais obteve 10 contratos válidos e 10 correções esperadas; ela cobriu apresentações, trabalho, convites, combinações, viagem, pedidos de esclarecimento, sentimentos e hobbies;
@@ -418,14 +419,55 @@ Decisões e validações já realizadas:
 - uma chamada real via `LlamaCppTutor` foi válida na GPU: prompt a 1601,81 tokens/s e geração a 66,78 tokens/s (86 tokens). A resposta corrigiu "Yesterday I go to school and meet my friends." para "Yesterday I went to school and met my friends.";
 - `LlamaCppTutor` usa a API HTTP de um `llama-server` local já iniciado, sem gerenciar downloads ou o processo do servidor;
 - se a resposta não passa na validação, o tutor faz uma única nova tentativa com instrução reforçada e então retorna uma falha controlada;
-- respostas do modelo passam por validação determinística: os três campos devem estar preenchidos e o texto corrigido deve permanecer relacionado à mensagem do aluno;
+- respostas do modelo passam por validação determinística: correção e explicação devem estar preenchidas, `reply_en` deve estar preenchido quando habilitado e vazio quando desabilitado; o texto corrigido deve permanecer relacionado à mensagem do aluno;
 - a validação é uma proteção adicional contra respostas desviadas por instruções na entrada e não substitui a avaliação de qualidade gramatical e pedagógica.
 
-Próximos marcos devem seguir esta ordem geral:
+Interface de chat da V1 implementada e validada, nos seguintes marcos:
 
-1. definir e testar o contrato funcional do tutor textual;
-2. manter esse contrato independente de um LLM específico;
-3. somente depois considerar interface mais elaborada.
+1. definir o contrato local de chats e mensagens, incluindo persistência, sem acoplar o núcleo à interface (concluído: `Chat`, `UserMessage`, `AssistantMessage` e `ChatStore`);
+2. implementar a persistência local de chats independentes e seus testes (concluído com `SqliteChatStore`, sem dependências externas);
+3. criar a estrutura visual responsiva com Vue 3 e FastAPI local: sidebar, criação, seleção e exclusão com confirmação (concluído);
+4. exibir o histórico em ordem cronológica e o formato estruturado da resposta do tutor (concluído);
+5. adicionar o campo de envio, `Enter` para enviar e `Shift+Enter` para nova linha (concluído);
+6. integrar o envio com `LlamaCppTutor`, estados de carregamento, indisponibilidade do servidor e nova tentativa (concluído);
+7. validar manualmente o fluxo completo: criar chat, conversar, trocar, manter histórico e excluir (concluído pelo usuário).
+
+O tutor recebe uma janela das 12 mensagens mais recentes do chat antes da nova mensagem. A consulta SQLite já limita essa leitura; o histórico completo permanece salvo. Esse limite é de mensagens, não uma garantia de tamanho em tokens.
+
+A V1 inclui a seção `Translate`, independente dos chats:
+
+- recebe um texto isolado, sem criar ou consultar histórico;
+- retorna uma tradução direta e uma interpretação breve de tom, intenção ou expressão relevante quando necessário;
+- usa contrato e chamada ao modelo próprios, sem correção pedagógica, resposta de continuidade ou validação do tutor;
+- aparece como entrada principal ao lado de `Chats`;
+- suporta inglês para português e português para inglês;
+- já possui contrato, adaptador local, API e interface próprios, sem criar chat ou persistir conteúdo.
+
+Decisão de interface: a V1 usará Vue 3 para a camada visual, servido por uma API local em FastAPI. A adoção deve permanecer limitada ao necessário para a interface de chat, sem biblioteca adicional de componentes ou gerenciamento de estado nesta fase. O `nvm` do usuário já fornece Node.js 26.3.0 e npm 11.16.0, adequados ao fluxo atual do Vue; o Node.js 18.19.1 visto fora do `nvm` é apenas a versão do sistema.
+
+Base do frontend criada em `frontend/`: Vue 3.5.43, Vite 8.3.0 e `@vitejs/plugin-vue` 6.0.9. Nenhuma biblioteca de componentes, roteamento ou gerenciamento de estado foi instalada.
+
+Os títulos dos chats podem ser editados pelo cabeçalho da conversa selecionada; a alteração é persistida em SQLite e atualiza imediatamente a barra lateral.
+
+FastAPI 0.141.1 e Uvicorn 0.53.0 foram instalados como dependências da aplicação. `httpx2` 2.13.0 foi adicionado somente ao grupo de desenvolvimento, pois o `TestClient` do Starlette atual o exige para testar a API. O Vite usa proxy local de `/api` para `127.0.0.1:8000` durante o desenvolvimento.
+
+Para uso normal, `scripts/start_linguaforge.sh` inicia o `llama-server`, aguarda o modelo ficar disponível, compila o frontend Vue e inicia FastAPI em `http://127.0.0.1:8000`. Ele encerra o servidor do modelo que iniciou quando recebe `Ctrl+C`; se já houver um `llama-server` saudável, apenas o reutiliza. `scripts/start_app.sh` e `scripts/start_llama_server.sh` permanecem disponíveis para diagnóstico separado.
+
+Em `Settings`, o usuário pode desabilitar `Enable Reply`. A escolha fica salva no navegador, oculta Replies já existentes e pede ao modelo uma resposta sem continuação nas próximas mensagens, reduzindo os tokens de saída.
+
+
+Revisão final de 19/09/2026:
+
+- respostas assíncronas e rascunhos ficam isolados por chat; a interface ignora leituras antigas após trocar de conversa;
+- aluno e tutor são salvos em uma única transação; exclusão concorrente retorna 404 e contexto alterado por outra aba retorna 409;
+- respostas malformadas, vazias ou truncadas do modelo são rejeitadas com erro 502; indisponibilidade mantém 503; a consulta de saúde tem timeout de 3 segundos;
+- `Reply` desabilitado exige string vazia no schema e na validação; o prompt preserva o ponto de vista do aluno e usa fatos do histórico para responder;
+- diálogos usam foco nativo, Escape e bloqueio de ações durante salvamento; tradução mantém idiomas distintos; o layout foi verificado em 320, 360, 640 e 900 px;
+- o iniciador verifica pré-requisitos, limita espera de saúde, encerra somente processos próprios e não sincroniza/baixa dependências; log em `data/llama-server.log`;
+- `README.md` documenta uso e limites; o roteiro manual em Markdown/PDF pode ser regenerado com `scripts/generate_manual_test_pdf.py`;
+- resultados e limitações desta revisão estão em `docs/revisao-final-v1.md`.
+
+Próximo marco: commit da V1 revisada quando solicitado. Empacotamento como aplicativo/instalador será uma etapa posterior; ainda se executa pelo repositório.
 
 Áudio permanece fora do escopo da V1.
 

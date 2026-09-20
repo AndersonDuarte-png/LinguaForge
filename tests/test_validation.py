@@ -49,3 +49,33 @@ def test_rejects_a_correction_that_follows_an_instruction_in_the_message():
 
     assert not result.accepted
     assert result.issues == ("corrected_text is unrelated to the student message.",)
+
+
+def test_allows_an_empty_reply_when_conversation_continuation_is_disabled(tutor_request):
+    response = TutorResponse(
+        corrected_text="Yesterday I went to the park and met my friends.",
+        explanation_pt="Use the past forms 'went' and 'met' after 'yesterday'.",
+        reply_en="",
+    )
+
+    result = validate_tutor_response(tutor_request, response, require_reply=False)
+
+    assert result.accepted
+
+
+def test_rejects_nonempty_reply_when_disabled(tutor_request, response):
+    result = validate_tutor_response(tutor_request, response, require_reply=False)
+
+    assert not result.accepted
+    assert result.issues == ("reply_en must be empty when disabled.",)
+
+
+def test_repeated_phrases_do_not_hide_a_legitimate_correction():
+    request = TutorRequest(message="I go to work yesterday. " * 15)
+    response = TutorResponse(
+        corrected_text="I went to work yesterday. " * 15,
+        explanation_pt="Use went para uma ação no passado.",
+        reply_en="How was work?",
+    )
+
+    assert validate_tutor_response(request, response).accepted

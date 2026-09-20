@@ -10,12 +10,12 @@ class Config:
     data_dir: Path
     models_dir: Path
     device: str = "auto"
-    interface_language: str = "pt-BR"
+    interface_language: str = "en"
     target_language: str = "en"
 
 
 def get_config() -> Config:
-    # project_root is two parents above this file: linguaforge -> src -> project root
+    # A raiz do projeto fica dois níveis acima deste arquivo: linguaforge -> src -> projeto.
     project_root = Path(__file__).resolve().parents[2]
     data_dir = project_root / "data"
     models_dir = project_root / "models"
@@ -27,5 +27,5 @@ def get_config() -> Config:
     )
 
 
-# Module-level default config instance
+# Instância de configuração padrão do módulo.
 config = get_config()

@@ -6,7 +6,7 @@ from linguaforge.config import Config
 
 @dataclass(frozen=True)
 class Runtime:
-    """Execution state with an explicitly selected device."""
+    """Estado de execução com um dispositivo selecionado explicitamente."""
 
     device: Literal["cpu", "cuda"]
 
@@ -16,7 +16,7 @@ class Runtime:
 
 
 def resolve_runtime(config: Config, *, cuda_available: bool) -> Runtime:
-    """Resolve the requested device using availability supplied by the caller."""
+    """Resolve o dispositivo solicitado com a disponibilidade informada pelo chamador."""
     if config.device == "cpu":
         return Runtime(device="cpu")
     if config.device == "auto":

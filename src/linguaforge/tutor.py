@@ -1,19 +1,19 @@
-"""Domain contract for one text-based tutoring turn."""
+"""Contrato de domínio para um turno do tutor textual."""
 
 from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
 class TutorRequest:
-    """The student's original message written in English."""
+    """Mensagem original do aluno, escrita em inglês."""
 
     message: str
 
 
 @dataclass(frozen=True)
 class TutorResponse:
-    """Correction, explanation, and conversation reply for a tutoring turn."""
+    """Correção, explicação e resposta de continuidade de um turno do tutor."""
 
-    corrected_text: str  # Corrected student message in English.
-    explanation_pt: str  # Short explanation in Portuguese.
-    reply_en: str  # Tutor's reply in English to continue the conversation.
+    corrected_text: str  # Mensagem do aluno corrigida em inglês.
+    explanation_pt: str  # Explicação breve em português.
+    reply_en: str  # Continuação em inglês; vazia quando Reply estiver desabilitado.

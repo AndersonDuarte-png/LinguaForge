@@ -1,0 +1,662 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R 10 0 R 12 0 R] /Count 4 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Length 3879 >>
+stream
+BT
+/F1 9 Tf
+44 800 Td
+12 TL
+/F2 13 Tf
+(BATERIA DE TESTES MANUAIS - LINGUAFORGE V1) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(Objetivo: validar a aplicacao completa com o modelo local, antes da entrega da V1.) Tj
+T*
+/F1 9 Tf
+(Data da execucao: ____________________    Responsavel: ____________________) Tj
+T*
+/F1 9 Tf
+(Resultado geral: [ ] aprovado  [ ] aprovado com observacoes  [ ] reprovado) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F2 13 Tf
+(PREPARACAO) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(1. Em um terminal nativo, entre na pasta do projeto LinguaForge.) Tj
+T*
+/F1 9 Tf
+(2. Execute ./scripts/start_linguaforge.sh e aguarde LinguaForge disponivel.) Tj
+T*
+/F1 9 Tf
+(3. Abra http://127.0.0.1:8000 no navegador.) Tj
+T*
+/F1 9 Tf
+(4. Confirme que a pagina inicial abre e que nao ha aviso de indisponibilidade.) Tj
+T*
+/F1 9 Tf
+(5. Registre GPU e memoria livre opcionalmente com: nvidia-smi.) Tj
+T*
+/F1 9 Tf
+(Regra: cada caso abaixo deve ser marcado como PASSOU, FALHOU ou NAO APLICAVEL.) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F2 13 Tf
+(CASOS DE CHAT) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(C01 - Criar chat) Tj
+T*
+/F1 9 Tf
+(Acao: clique em + New Chat.) Tj
+T*
+/F1 9 Tf
+(Esperado: um chat New Chat aparece na sidebar e fica selecionado.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(C02 - Turno basico do tutor) Tj
+T*
+/F1 9 Tf
+(Acao: envie: Yesterday I go to school and meet my friends.) Tj
+T*
+/F1 9 Tf
+(Esperado: aparece uma bolha do aluno e uma resposta da IA com Corrected text, Explanation e Reply.) Tj
+T*
+/F1 9 Tf
+(Esperado: a correcao usa went e met; a explicacao fica em portugues; a resposta continua em ingles.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(C03 - Quebra de linha) Tj
+T*
+/F1 9 Tf
+(Acao: escreva duas linhas usando Shift+Enter entre elas e envie com Enter.) Tj
+T*
+/F1 9 Tf
+(Esperado: Shift+Enter cria uma nova linha; Enter envia; o conteudo chega inteiro ao chat.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(C04 - Contexto da conversa) Tj
+T*
+/F1 9 Tf
+(Acao: em um novo chat, envie: I started a new job yesterday. Em seguida envie: It was very) Tj
+T*
+/F1 9 Tf
+(stressful.) Tj
+T*
+/F1 9 Tf
+(Esperado: a segunda resposta reconhece o contexto do trabalho novo, sem trocar de assunto ou) Tj
+T*
+/F1 9 Tf
+(inventar fatos.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F2 13 Tf
+(CASOS DE CHATS INDEPENDENTES) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(C05 - Separacao de historicos) Tj
+T*
+/F1 9 Tf
+(Acao: no Chat A, converse sobre cooking. Crie o Chat B e converse sobre travel. Volte ao Chat A.) Tj
+T*
+/F1 9 Tf
+(Esperado: cada chat mostra somente suas mensagens; o tutor no Chat A usa o contexto de cooking.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(C06 - Persistencia apos reinicio) Tj
+T*
+/F1 9 Tf
+(Acao: encerre scripts/start_linguaforge.sh com Ctrl+C, inicie-o novamente e atualize o navegador.) Tj
+T*
+/F1 9 Tf
+(Esperado: chats e mensagens anteriores continuam presentes e o chat mais recentemente criado e) Tj
+T*
+/F1 9 Tf
+(selecionado.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(C07 - Exclusao com confirmacao) Tj
+T*
+/F1 9 Tf
+(Acao: clique no X de um chat. Primeiro escolha Cancel; depois repita e escolha Delete.) Tj
+T*
+/F1 9 Tf
+(Esperado: Cancel preserva o chat; Delete remove o chat e todas as mensagens dele.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(C08 - Rolagem de conversa) Tj
+T*
+/F1 8 Tf
+0 -8 Td
+(Pagina 1 de 4) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Length 3995 >>
+stream
+BT
+/F1 9 Tf
+44 800 Td
+12 TL
+/F1 9 Tf
+(Acao: envie mensagens suficientes para ultrapassar a altura da tela.) Tj
+T*
+/F1 9 Tf
+(Esperado: a lista possui rolagem vertical e o chat acompanha a mensagem mais recente apos uma) Tj
+T*
+/F1 9 Tf
+(resposta.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F2 13 Tf
+(CASOS DE TRADUCAO) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(T01 - Ingles para portugues) Tj
+T*
+/F1 9 Tf
+(Acao: abra Translate, escolha English para Portuguese e envie: I am tied up this afternoon.) Tj
+T*
+/F1 9 Tf
+(Esperado: a traducao preserva o sentido de estar ocupado; Meaning explica a expressao se necessario.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(T02 - Portugues para ingles) Tj
+T*
+/F1 9 Tf
+(Acao: troque a direcao e envie: Estou ansioso para a reuniao de amanha.) Tj
+T*
+/F1 9 Tf
+(Esperado: a traducao fica em ingles natural e Meaning, quando houver, fica em portugues.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(T03 - Sem historico) Tj
+T*
+/F1 9 Tf
+(Acao: faca uma traducao, retorne a Chats e crie ou abra um chat.) Tj
+T*
+/F1 9 Tf
+(Esperado: a traducao nao cria chat, nao aparece no historico e nao afeta o contexto do tutor.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F2 13 Tf
+(INDISPONIBILIDADE E RECUPERACAO) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(I01 - Modelo indisponivel) Tj
+T*
+/F1 9 Tf
+(Acao: para este diagnostico, inicie start_app.sh e start_llama_server.sh em terminais separados;) Tj
+T*
+/F1 9 Tf
+(pare somente o modelo e envie uma mensagem.) Tj
+T*
+/F1 9 Tf
+(Esperado: o aviso Tutor is unavailable aparece abaixo da barra de digitacao.) Tj
+T*
+/F1 9 Tf
+(Esperado: o texto permanece na caixa; nenhuma bolha e salva no historico.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(I02 - Recuperacao automatica) Tj
+T*
+/F1 9 Tf
+(Acao: com o aviso visivel, inicie novamente scripts/start_llama_server.sh.) Tj
+T*
+/F1 9 Tf
+(Esperado: em ate 10 segundos, o aviso some automaticamente quando o modelo estiver pronto.) Tj
+T*
+/F1 9 Tf
+(Esperado: envie o texto que permaneceu na caixa e confirme a resposta normal.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(I03 - Tradutor indisponivel) Tj
+T*
+/F1 9 Tf
+(Acao: repita I01 dentro da secao Translate.) Tj
+T*
+/F1 9 Tf
+(Esperado: aparece aviso do tradutor; o texto de traducao continua preservado.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F2 13 Tf
+(INTERFACE E RESPONSIVIDADE) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(U01 - Layout de desktop) Tj
+T*
+/F1 9 Tf
+(Acao: use a janela em largura normal.) Tj
+T*
+/F1 9 Tf
+(Esperado: sidebar a esquerda; aluno a direita; IA a esquerda; barra de digitacao visivel no rodape.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(U02 - Tela estreita) Tj
+T*
+/F1 9 Tf
+(Acao: reduza o navegador para 320, 640 e 900 px ou use a emulacao de celular.) Tj
+T*
+/F1 9 Tf
+(Esperado: controles continuam acessiveis, sem rolagem horizontal da pagina; ate 640 px a navegacao) Tj
+T*
+/F1 9 Tf
+(fica no topo. Textos longos quebram linha e o compositor fica visivel.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(U03 - Idioma da interface) Tj
+T*
+/F1 9 Tf
+(Acao: revise botoes, rotulos, placeholders e mensagens de erro.) Tj
+T*
+/F1 9 Tf
+(Esperado: a interface fica em ingles; somente as explicacoes pedagogicas e Meaning podem ficar em) Tj
+T*
+/F1 9 Tf
+(portugues.) Tj
+T*
+/F1 8 Tf
+0 -8 Td
+(Pagina 2 de 4) Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 7 0 R >>
+endobj
+9 0 obj
+<< /Length 3887 >>
+stream
+BT
+/F1 9 Tf
+44 800 Td
+12 TL
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F2 13 Tf
+(CONFIGURACOES E TITULOS) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(U04 - Desabilitar e reabilitar Reply) Tj
+T*
+/F1 9 Tf
+(Acao: abra Settings e desmarque Enable Reply; envie uma frase. Recarregue a pagina e confira a) Tj
+T*
+/F1 9 Tf
+(preferencia; depois reative e envie outra frase.) Tj
+T*
+/F1 9 Tf
+(Esperado: correcao e explicacao permanecem; desativado nao gera Reply. Ao reativar, respostas) Tj
+T*
+/F1 9 Tf
+(antigas existentes reaparecem, sem inventar Replies para turnos que nao os geraram.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(U05 - Renomear chat) Tj
+T*
+/F1 9 Tf
+(Acao: abra Edit title, salve outro nome e recarregue. Tente salvar somente espacos e teste Cancel e) Tj
+T*
+/F1 9 Tf
+(Escape.) Tj
+T*
+/F1 9 Tf
+(Esperado: titulo persistido na lateral e cabecalho, limite de 80 caracteres, nenhum titulo vazio;) Tj
+T*
+/F1 9 Tf
+(cancelamento preserva o nome.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(U06 - Navegacao por teclado) Tj
+T*
+/F1 9 Tf
+(Acao: abra Settings, Edit title e a confirmacao de exclusao usando teclado. Navegue com Tab e feche) Tj
+T*
+/F1 9 Tf
+(com Escape.) Tj
+T*
+/F1 9 Tf
+(Esperado: foco visivel e contido no dialogo; ao fechar retorna ao controle de origem; campos e) Tj
+T*
+/F1 9 Tf
+(botoes acessiveis.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F2 13 Tf
+(REGRESSOES DA REVISAO FINAL) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(R01 - Trocar de chat durante resposta) Tj
+T*
+/F1 9 Tf
+(Acao: envie no chat A e, durante a geracao, selecione B e digite um rascunho. Volte a A depois da) Tj
+T*
+/F1 9 Tf
+(resposta.) Tj
+T*
+/F1 9 Tf
+(Esperado: resposta permanece em A; historico e rascunho de B nao sao alterados. Nenhuma duplicacao) Tj
+T*
+/F1 9 Tf
+(ao voltar a A.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(R02 - Contexto preserva pronomes e fatos) Tj
+T*
+/F1 9 Tf
+(Acao: envie My dog is named Kira. e depois What is my dog's name?) Tj
+T*
+/F1 9 Tf
+(Esperado: pergunta permanece com my; Reply recupera Kira, sem alterar o ponto de vista do aluno.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(R03 - Traducao e direcao) Tj
+T*
+/F1 9 Tf
+(Acao: selecione cada sentido, use Swap e traduza; edite depois o texto original.) Tj
+T*
+/F1 9 Tf
+(Esperado: idiomas sao sempre distintos, edicao limpa resultado antigo, controles ficam protegidos) Tj
+T*
+/F1 9 Tf
+(durante geracao.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(R04 - Inicializacao e encerramento) Tj
+T*
+/F1 9 Tf
+(Acao: com portas livres, use start_linguaforge.sh e depois Ctrl+C. Repita com o modelo ja iniciado) Tj
+T*
+/F1 9 Tf
+(separadamente.) Tj
+T*
+/F1 9 Tf
+(Esperado: so anuncia disponibilidade depois de modelo e API prontos; encerra processos que iniciou e) Tj
+T*
+/F1 9 Tf
+(preserva o modelo externo.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(R05 - Duas abas no mesmo chat) Tj
+T*
+/F1 9 Tf
+(Acao: envie simultaneamente duas mensagens em duas abas do mesmo chat.) Tj
+T*
+/F1 9 Tf
+(Esperado: se o contexto mudou durante geracao, a segunda operacao orienta recarregar; nenhuma metade) Tj
+T*
+/F1 9 Tf
+(de turno ou historico sobrescrito.) Tj
+T*
+/F1 9 Tf
+(Resultado: [ ] passou [ ] falhou  Observacao: _______________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 8 Tf
+0 -8 Td
+(Pagina 3 de 4) Tj
+ET
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 9 0 R >>
+endobj
+11 0 obj
+<< /Length 926 >>
+stream
+BT
+/F1 9 Tf
+44 800 Td
+12 TL
+/F2 13 Tf
+(CRITERIO DE ACEITACAO) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 9 Tf
+(A V1 pode seguir para entrega quando todos os casos aplicaveis passarem.) Tj
+T*
+/F1 9 Tf
+(Falhas que bloqueiam a entrega: perda de historico, mistura entre chats, ausencia de resposta do) Tj
+T*
+/F1 9 Tf
+(tutor com servidor saudavel, traducao salva como chat, exclusao sem confirmacao, ou interface) Tj
+T*
+/F1 9 Tf
+(inutilizavel em tela estreita.) Tj
+T*
+/F1 9 Tf
+(Observacoes finais:) Tj
+T*
+/F1 9 Tf
+(______________________________________________________________________________) Tj
+T*
+/F1 9 Tf
+(______________________________________________________________________________) Tj
+T*
+/F1 9 Tf
+(______________________________________________________________________________) Tj
+T*
+/F1 9 Tf
+(Assinatura: _______________________________    Data: _________________________) Tj
+T*
+/F1 9 Tf
+() Tj
+T*
+/F1 8 Tf
+0 -8 Td
+(Pagina 4 de 4) Tj
+ET
+endstream
+endobj
+12 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 11 0 R >>
+endobj
+xref
+0 13
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000141 00000 n 
+0000000211 00000 n 
+0000000286 00000 n 
+0000004217 00000 n 
+0000004353 00000 n 
+0000008400 00000 n 
+0000008536 00000 n 
+0000012475 00000 n 
+0000012612 00000 n 
+0000013590 00000 n 
+trailer
+<< /Size 13 /Root 1 0 R >>
+startxref
+13728
+%%EOF

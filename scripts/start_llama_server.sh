@@ -13,6 +13,11 @@ for required_path in "$server" "$runtime_dir/libcudart.so.12" "$model"; do
     fi
 done
 
+if [[ ! -x "$server" ]]; then
+    printf 'O backend não tem permissão de execução: %s\n' "$server" >&2
+    exit 1
+fi
+
 export LD_LIBRARY_PATH="$runtime_dir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 exec "$server" \

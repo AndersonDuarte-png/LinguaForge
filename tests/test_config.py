@@ -11,13 +11,13 @@ def test_config_paths_and_defaults():
     assert isinstance(cfg.models_dir, Path)
     assert cfg.project_root == Path(__file__).resolve().parents[1]
 
-    # data_dir and models_dir should be subpaths of project_root
+    # data_dir e models_dir devem ser subdiretórios de project_root.
     assert cfg.data_dir == cfg.project_root / "data"
     assert cfg.models_dir == cfg.project_root / "models"
 
-    # Defaults
+    # Valores padrão.
     assert cfg.device == "auto"
-    assert cfg.interface_language == "pt-BR"
+    assert cfg.interface_language == "en"
     assert cfg.target_language == "en"
 
 
