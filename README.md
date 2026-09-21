@@ -17,6 +17,10 @@ Aguarde `LinguaForge disponível` e abra <http://127.0.0.1:8000>. O iniciador ve
 
 A aplicação usa apenas `127.0.0.1:8000` (interface/API) e `127.0.0.1:8080` (modelo). O iniciador não instala dependências, não baixa modelos nem altera configuração global de GPU. O paliativo de `LD_LIBRARY_PATH` se aplica apenas ao processo do llama.cpp.
 
+## Aplicativo desktop
+
+Para instalar a versão desktop no Pop!_OS 24.04 amd64, use o pacote gerado em `dist/linguaforge_0.1.0_amd64.deb`. As instruções de instalação, preparação única dos caminhos do modelo/backend, importação de chats, atualização e remoção estão em [instalacao-desktop.md](docs/instalacao-desktop.md).
+
 ## Funcionalidades da V1
 
 - Chats independentes com histórico local; criação, título editável e exclusão com confirmação.
@@ -75,4 +79,4 @@ uv run --no-sync python scripts/generate_manual_test_pdf.py
 
 O modelo pode errar uma correção, interpretação ou informação mesmo quando o formato da resposta é válido. A validação determinística verifica estrutura e semelhança do texto; ela não comprova precisão pedagógica. Textos ou conversas que excedam a capacidade do modelo podem gerar erro controlado; respostas truncadas não são salvas como completas.
 
-A V1 atual é executada a partir do repositório. Empacotamento em aplicativo/instalador e áudio ficam para etapas posteriores. A detecção de GPU dentro de ambientes integrados pode diferir do terminal nativo; execute o iniciador pelo terminal nativo já validado.
+A V1 possui pacote `.deb` inicial para Pop!_OS 24.04 amd64; áudio continua fora do escopo. A detecção de GPU dentro de ambientes integrados pode diferir do terminal nativo; o pacote deve ser instalado e executado pelo sistema nativo.

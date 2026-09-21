@@ -25,4 +25,6 @@ exec "$server" \
     --host "${LLAMA_HOST:-127.0.0.1}" \
     --port "${LLAMA_PORT:-8080}" \
     --gpu-layers "${LLAMA_GPU_LAYERS:-999}" \
+    --ctx-size "${LLAMA_CONTEXT_SIZE:-4096}" \
+    --parallel "${LLAMA_PARALLEL_SLOTS:-1}" \
     "$@"

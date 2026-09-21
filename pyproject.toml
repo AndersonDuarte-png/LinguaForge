@@ -12,11 +12,18 @@ dependencies = [
 [project.scripts]
 linguaforge = "linguaforge.main:main"
 linguaforge-web = "linguaforge.web:run"
+linguaforge-desktop = "linguaforge.desktop_app:main"
 
 [dependency-groups]
+desktop = [
+    "pywebview>=6.2.1",
+]
 dev = [
     "httpx2>=2.13.0",
     "pytest>=9.1.1",
+]
+packaging = [
+    "pyinstaller>=6.22.3",
 ]
 
 [build-system]

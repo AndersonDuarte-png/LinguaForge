@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=LinguaForge
+Comment=Local English learning assistant
+Exec=linguaforge
+Icon=linguaforge
+Terminal=false
+Categories=Education;
+Keywords=English;Tutor;Language;Learning;
+StartupNotify=true

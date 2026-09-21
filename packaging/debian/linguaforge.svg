@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="LinguaForge">
+  <defs>
+    <linearGradient id="background" x1="16" y1="12" x2="112" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7564f6"/>
+      <stop offset="1" stop-color="#3d2c9f"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#background)"/>
+  <path d="M39 34h50v16H66v45H50V50H39z" fill="#fff"/>
+  <path d="M70 78h22v16H70z" fill="#c8c1ff"/>
+</svg>

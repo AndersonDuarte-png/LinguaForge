@@ -1,0 +1,10 @@
+Package: linguaforge
+Version: @VERSION@
+Section: education
+Priority: optional
+Architecture: amd64
+Depends: gir1.2-webkit2-4.1
+Maintainer: LinguaForge Local <local@linguaforge.invalid>
+Description: Local English learning assistant
+ LinguaForge is a local English tutor with a native desktop window.
+ The language model and chat data are intentionally kept outside this package.

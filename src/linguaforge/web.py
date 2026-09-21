@@ -21,7 +21,7 @@ from linguaforge.chats import (
     ChatNotFoundError,
     UserMessage,
 )
-from linguaforge.config import get_config
+from linguaforge.config import Config, get_config
 from linguaforge.llama_cpp import (
     LlamaCppTranslationError,
     LlamaCppTranslator,
@@ -60,9 +60,12 @@ def create_app(
     database_path: Path | None = None,
     tutor: LlamaCppTutor | None = None,
     translator: LlamaCppTranslator | None = None,
+    *,
+    config: Config | None = None,
 ) -> FastAPI:
     """Cria a API local com um armazenamento de chats isolado."""
-    store = SqliteChatStore(database_path or get_config().data_dir / "chats.sqlite3")
+    app_config = config or get_config()
+    store = SqliteChatStore(database_path or app_config.data_dir / "chats.sqlite3")
     local_tutor = tutor or LlamaCppTutor()
     local_translator = translator or LlamaCppTranslator()
     app = FastAPI(title="LinguaForge")
@@ -184,7 +187,7 @@ def create_app(
         store.delete_chat(chat_id)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-    frontend_dist = get_config().project_root / "frontend" / "dist"
+    frontend_dist = app_config.frontend_dir
     if frontend_dist.is_dir():
         app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
 

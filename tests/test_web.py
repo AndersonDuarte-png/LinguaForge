@@ -312,3 +312,20 @@ def test_invalid_translation_input_does_not_call_the_model(tmp_path, payload):
     client = TestClient(create_app(tmp_path / "chats.sqlite3", translator=UnexpectedTranslator()))
 
     assert client.post("/api/translate", json=payload).status_code == 422
+
+
+def test_installed_app_serves_packaged_resources_and_keeps_database_outside_bundle(tmp_path, monkeypatch):
+    from dataclasses import replace
+    from linguaforge.config import get_config
+
+    resources = tmp_path / "readonly-bundle/frontend"
+    resources.mkdir(parents=True)
+    (resources / "index.html").write_text("<html>Packaged LinguaForge</html>")
+    cfg = replace(get_config(), frontend_dir=resources, data_dir=tmp_path / "user-data")
+    monkeypatch.chdir(tmp_path)
+    client = TestClient(create_app(config=cfg))
+    assert "Packaged LinguaForge" in client.get("/").text
+    chat = client.post("/api/chats").json()
+    assert client.get("/api/chats").json() == [chat]
+    assert (cfg.data_dir / "chats.sqlite3").exists()
+    assert not tuple(resources.glob("*.sqlite3"))
