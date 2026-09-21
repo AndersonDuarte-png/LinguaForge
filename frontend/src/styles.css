@@ -67,6 +67,8 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .translation-languages { display: flex; align-items: end; gap: 10px; }
 .translation-languages label { min-width: 0; display: grid; flex: 1; gap: 6px; color: #bfc3ce; font-size: .875rem; }
 .translation-languages select, .translation-form textarea { min-width: 0; width: 100%; border: 1px solid #3a3f4c; border-radius: 10px; padding: 11px 12px; color: #e8e9ee; background: #252934; }
+.translation-languages select { appearance: none; -webkit-appearance: none; padding-right: 40px; background-image: linear-gradient(45deg, transparent 50%, #bfc3ce 50%), linear-gradient(135deg, #bfc3ce 50%, transparent 50%); background-position: calc(100% - 17px) 52%, calc(100% - 12px) 52%; background-repeat: no-repeat; background-size: 5px 5px, 5px 5px; }
+.translation-languages select:disabled { cursor: not-allowed; color: #a7abb8; opacity: .6; }
 .translation-form textarea { width: 100%; resize: vertical; }
 .swap-languages { border: 0; border-radius: 8px; padding: 10px; color: #e8e9ee; background: #363b48; cursor: pointer; }
 .translate-button { justify-self: end; border: 0; border-radius: 9px; padding: 11px 18px; color: #fff; background: #5554d8; cursor: pointer; }
