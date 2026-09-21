@@ -98,7 +98,7 @@ def test_setup_server_picker_filters_for_the_server_executable(tmp_path):
 
     assert bridge.select_server() == str(selected)
     assert bridge.window.dialog_type == Webview.FileDialog.OPEN
-    assert bridge.window.file_types == ("llama-server (llama-server)",)
+    assert bridge.window.file_types == ("All files (*)",)
 
 
 def test_started_model_is_terminated_by_the_session(tmp_path):
