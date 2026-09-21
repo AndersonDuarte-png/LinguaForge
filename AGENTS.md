@@ -475,6 +475,8 @@ A etapa 4 foi concluída em 21/09/2026: `scripts/build_deb.sh` gera `dist/lingua
 
 Após a primeira instalação, a janela desktop identifica a ausência do modelo ou backend e mostra `Initial setup`. Ela permite selecionar os recursos locais já existentes, valida os caminhos e continua a inicialização sem abrir um terminal nem reiniciar a aplicação. O fluxo não procura, baixa, copia ou move arquivos; o comando `--configure-resources` permanece disponível apenas como alternativa de diagnóstico.
 
+Quando a inicialização do tutor falha após a configuração, a janela oferece `Configure local resources` e retorna aos campos na própria sessão para corrigir os caminhos e tentar novamente.
+
 Áudio permanece fora do escopo da V1.
 
 ## Resposta ao terminar uma tarefa

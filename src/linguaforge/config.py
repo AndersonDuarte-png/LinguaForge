@@ -93,6 +93,8 @@ def save_resource_paths(
                 raise ValueError(f"Diretório não encontrado: {path}")
         elif not path.is_file():
             raise ValueError(f"Arquivo não encontrado: {path}")
+        elif key == "llama_server_path" and path.name != "llama-server":
+            raise ValueError(f"Select the executable named llama-server: {path}")
         elif key == "llama_server_path" and not os.access(path, os.X_OK):
             raise ValueError(f"Backend sem permissão de execução: {path}")
         current[key] = str(path)

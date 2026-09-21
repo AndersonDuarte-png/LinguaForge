@@ -115,6 +115,11 @@ def test_saved_resource_paths_reject_missing_or_relative_values(tmp_path):
         config.save_resource_paths(tmp_path, model_path=tmp_path / "missing.gguf")
     with pytest.raises(ValueError, match="absoluto"):
         config.save_resource_paths(tmp_path, llama_server_path=Path("relative-server"))
+    library = tmp_path / "libllama-server-impl.so"
+    library.touch()
+    library.chmod(0o755)
+    with pytest.raises(ValueError, match="llama-server"):
+        config.save_resource_paths(tmp_path, llama_server_path=library)
 
 
 @pytest.mark.parametrize("variable", ["LINGUAFORGE_MODEL_PATH", "LINGUAFORGE_LLAMA_SERVER", "LINGUAFORGE_CUDA_RUNTIME_DIR"])

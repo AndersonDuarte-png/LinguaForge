@@ -18,6 +18,8 @@ Na primeira abertura, a janela **Initial setup** pede o arquivo GGUF e o execut�
 
 Esse fluxo não baixa, copia nem move modelo ou backend. Os caminhos ficam em `~/.config/linguaforge/runtime-paths.json`, com permissão de usuário.
 
+Se a inicialização falhar depois de salvar, a tela de erro oferece **Configure local resources**. Ela retorna aos campos na mesma janela para selecionar outros caminhos e tentar novamente.
+
 Como alternativa de diagnóstico, os mesmos caminhos podem ser configurados pelo terminal. Os caminhos abaixo são os validados neste computador; ajuste apenas se eles estiverem em outro local.
 
 ```sh

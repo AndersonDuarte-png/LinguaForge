@@ -44,6 +44,10 @@ def test_resources_are_ready_requires_existing_model_and_server(tmp_path):
     assert not resources_are_ready(config)
     config.llama_server_path.touch()
     assert resources_are_ready(config)
+    invalid_server = config.llama_server_path.with_name("libllama-server-impl.so")
+    config = replace(config, llama_server_path=invalid_server)
+    invalid_server.touch()
+    assert not resources_are_ready(config)
 
 
 def test_first_run_setup_saves_resources_and_starts_without_reopening(tmp_path, monkeypatch):
@@ -62,7 +66,8 @@ def test_first_run_setup_saves_resources_and_starts_without_reopening(tmp_path, 
         def load_html(self, page):
             self.page = page
 
-    bridge = _SetupBridge(config, object(), started.append)
+    reopened = []
+    bridge = _SetupBridge(config, object(), started.append, lambda: reopened.append(True))
     bridge.window = Window()
     result = bridge.save_resources(str(model), str(server), str(runtime))
 
@@ -70,6 +75,8 @@ def test_first_run_setup_saves_resources_and_starts_without_reopening(tmp_path, 
     assert bridge.window.page == "<!doctype html><title>LinguaForge</title><body style='font:16px sans-serif;background:#171923;color:#eee;padding:3rem'><h1>LinguaForge</h1><p>Starting the local tutor…</p></body>"
     assert started[0].model_path == model
     assert started[0].llama_server_path == server
+    assert bridge.open_setup() == {"ok": True}
+    assert reopened == [True]
 
 
 def test_started_model_is_terminated_by_the_session(tmp_path):

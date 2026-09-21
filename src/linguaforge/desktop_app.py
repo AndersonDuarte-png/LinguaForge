@@ -22,8 +22,13 @@ from linguaforge.web import create_app
 _LOADING_PAGE = """<!doctype html><title>LinguaForge</title><body style='font:16px sans-serif;background:#171923;color:#eee;padding:3rem'><h1>LinguaForge</h1><p>Starting the local tutor…</p></body>"""
 
 
-def _error_page(message: str) -> str:
-    return """<!doctype html><title>LinguaForge</title><body style='font:16px sans-serif;background:#171923;color:#eee;padding:3rem'><h1>LinguaForge</h1><p>Could not start the local tutor.</p><pre style='white-space:pre-wrap'>%s</pre><p>Close this window, correct the local configuration, and try again.</p></body>""" % html.escape(message)
+def _error_page(message: str, *, allow_setup: bool = False) -> str:
+    action = (
+        "<button onclick=\"window.pywebview.api.open_setup()\" style=\"background:#5b5ce2;border:0;border-radius:6px;color:white;cursor:pointer;font:inherit;padding:10px 14px\">Configure local resources</button>"
+        if allow_setup
+        else "<p>Close this window, correct the local configuration, and try again.</p>"
+    )
+    return """<!doctype html><title>LinguaForge</title><body style='font:16px sans-serif;background:#171923;color:#eee;padding:3rem'><h1>LinguaForge</h1><p>Could not start the local tutor.</p><pre style='white-space:pre-wrap'>%s</pre>%s</body>""" % (html.escape(message), action)
 
 
 def _setup_page(config) -> str:
@@ -75,16 +80,21 @@ async function save() {
 
 def resources_are_ready(config) -> bool:
     """Indica se há arquivos mínimos para iniciar o tutor sem adivinhar caminhos."""
-    return config.model_path.is_file() and config.llama_server_path.is_file()
+    return (
+        config.model_path.is_file()
+        and config.llama_server_path.name == "llama-server"
+        and config.llama_server_path.is_file()
+    )
 
 
 class _SetupBridge:
     """Expõe à tela inicial somente a seleção e gravação explícitas de caminhos."""
 
-    def __init__(self, config, webview_module, start) -> None:
+    def __init__(self, config, webview_module, start, open_setup) -> None:
         self.config = config
         self.webview_module = webview_module
         self.start = start
+        self.open_setup_callback = open_setup
         self.window = None
         self.started = False
 
@@ -101,6 +111,12 @@ class _SetupBridge:
 
     def select_runtime(self) -> str | None:
         return self._select(self.webview_module.FileDialog.FOLDER)
+
+    def open_setup(self) -> dict[str, bool]:
+        """Permite corrigir caminhos após uma falha de inicialização."""
+        self.started = False
+        self.open_setup_callback()
+        return {"ok": True}
 
     def save_resources(self, model: str, server: str, runtime: str) -> dict[str, object]:
         if self.started:
@@ -213,6 +229,24 @@ def main() -> None:
         state: dict[str, object] = {"server": None, "worker": None, "listener": None, "model": None}
 
         window = None
+        setup = None
+
+        def stop_services() -> None:
+            """Encerra os serviços desta janela antes de uma nova tentativa."""
+            model = state.get("model")
+            if isinstance(model, ManagedModel):
+                model.close()
+            state["model"] = None
+            server = state.get("server")
+            worker = state.get("worker")
+            listener = state.get("listener")
+            if isinstance(server, uvicorn.Server):
+                server.should_exit = True
+            if isinstance(worker, threading.Thread):
+                worker.join(timeout=5)
+            if isinstance(listener, socket.socket):
+                listener.close()
+            state.update(server=None, worker=None, listener=None)
 
         def bootstrap(current_config) -> None:
             try:
@@ -238,7 +272,10 @@ def main() -> None:
                     raise DesktopStartupError("Vue não foi renderizado no prazo do smoke test.")
             except Exception as error:
                 state["error"] = error
-                window.load_html(_error_page(str(error)))
+                stop_services()
+                if setup is not None:
+                    setup.started = False
+                window.load_html(_error_page(str(error), allow_setup=True))
                 if args.smoke_test:
                     time.sleep(0.2)
                     window.destroy()
@@ -246,8 +283,16 @@ def main() -> None:
         def start_bootstrap(current_config) -> None:
             threading.Thread(target=bootstrap, args=(current_config,), daemon=True).start()
 
+        def show_setup() -> None:
+            """Mostra novamente os campos usando os caminhos atualmente salvos."""
+            assert window is not None and setup is not None
+            stop_services()
+            setup.config = get_config(installed=True)
+            window.load_html(_setup_page(setup.config))
+
+        setup = _SetupBridge(config, webview, start_bootstrap, show_setup)
+
         if needs_setup:
-            setup = _SetupBridge(config, webview, start_bootstrap)
             window = webview.create_window(
                 "LinguaForge",
                 html=_setup_page(config),
@@ -261,21 +306,16 @@ def main() -> None:
             webview.start(gui="gtk", private_mode=False, storage_path=str(webview_data))
         else:
             window = webview.create_window(
-                "LinguaForge", html=_LOADING_PAGE, width=1050, height=760, min_size=(360, 500), text_select=True
+                "LinguaForge",
+                html=_LOADING_PAGE,
+                js_api=setup,
+                width=1050,
+                height=760,
+                min_size=(360, 500),
+                text_select=True,
             )
             webview.start(lambda: start_bootstrap(config), gui="gtk", private_mode=False, storage_path=str(webview_data))
-        model = state.get("model")
-        if isinstance(model, ManagedModel):
-            model.close()
-        server = state.get("server")
-        worker = state.get("worker")
-        listener = state.get("listener")
-        if isinstance(server, uvicorn.Server):
-            server.should_exit = True
-        if isinstance(worker, threading.Thread):
-            worker.join(timeout=5)
-        if isinstance(listener, socket.socket):
-            listener.close()
+        stop_services()
         error = state.get("error")
         if args.smoke_test and isinstance(error, Exception):
             raise SystemExit(str(error))
