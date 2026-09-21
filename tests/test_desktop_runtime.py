@@ -7,6 +7,7 @@ import socket
 import pytest
 
 from linguaforge.config import get_config
+from linguaforge.desktop_app import _SetupBridge, resources_are_ready
 from linguaforge.desktop_runtime import DesktopStartupError, InstanceLock, start_or_reuse_model
 
 
@@ -30,6 +31,45 @@ def test_missing_model_fails_before_starting_process(monkeypatch, tmp_path):
     config = replace(get_config(installed=False), model_path=tmp_path / "missing.gguf")
     with pytest.raises(DesktopStartupError, match="Arquivo necessário"):
         start_or_reuse_model(config, timeout=0.1)
+
+
+def test_resources_are_ready_requires_existing_model_and_server(tmp_path):
+    config = replace(
+        get_config(installed=False),
+        model_path=tmp_path / "model.gguf",
+        llama_server_path=tmp_path / "llama-server",
+    )
+    assert not resources_are_ready(config)
+    config.model_path.touch()
+    assert not resources_are_ready(config)
+    config.llama_server_path.touch()
+    assert resources_are_ready(config)
+
+
+def test_first_run_setup_saves_resources_and_starts_without_reopening(tmp_path, monkeypatch):
+    model = tmp_path / "model.gguf"
+    server = tmp_path / "llama-server"
+    runtime = tmp_path / "runtime"
+    model.touch()
+    server.touch()
+    server.chmod(0o755)
+    runtime.mkdir()
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    config = get_config(installed=True)
+    started = []
+
+    class Window:
+        def load_html(self, page):
+            self.page = page
+
+    bridge = _SetupBridge(config, object(), started.append)
+    bridge.window = Window()
+    result = bridge.save_resources(str(model), str(server), str(runtime))
+
+    assert result == {"ok": True}
+    assert bridge.window.page == "<!doctype html><title>LinguaForge</title><body style='font:16px sans-serif;background:#171923;color:#eee;padding:3rem'><h1>LinguaForge</h1><p>Starting the local tutor…</p></body>"
+    assert started[0].model_path == model
+    assert started[0].llama_server_path == server
 
 
 def test_started_model_is_terminated_by_the_session(tmp_path):

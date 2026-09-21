@@ -473,6 +473,8 @@ A etapa 3 foi concluída em 21/09/2026: `desktop_app.py` exibe carregamento e fa
 
 A etapa 4 foi concluída em 21/09/2026: `scripts/build_deb.sh` gera `dist/linguaforge_0.1.0_amd64.deb` para Pop!_OS 24.04 amd64, com bundle em `/opt/linguaforge`, comando, ícone e entrada no menu. O pacote declara `gir1.2-webkit2-4.1` e não inclui GGUF, backend, chats ou configuração. `scripts/test_deb_package.sh` validou extração, instalação isolada, atualização e remoção sem tocar no sistema real nem nos dados do usuário; a instalação nativa exige `sudo apt install` e permanece uma ação manual. `--configure-resources` grava, por escolha explícita do usuário, os caminhos de modelo/backend/runtime em `~/.config/linguaforge/runtime-paths.json`, sem cópia ou download. A suíte Python passou com 135 testes. Na validação real do pacote, o Qwen carregou e usou 3263 MiB de VRAM; para manter a margem de aproximadamente 6 GB, os iniciadores usam por padrão `--ctx-size 4096` e `--parallel 1`, configuráveis por `LLAMA_CONTEXT_SIZE` e `LLAMA_PARALLEL_SLOTS`. O encerramento não deixou `llama-server` ativo. A V1 de empacotamento está pronta para instalação nativa e uso manual.
 
+Após a primeira instalação, a janela desktop identifica a ausência do modelo ou backend e mostra `Initial setup`. Ela permite selecionar os recursos locais já existentes, valida os caminhos e continua a inicialização sem abrir um terminal nem reiniciar a aplicação. O fluxo não procura, baixa, copia ou move arquivos; o comando `--configure-resources` permanece disponível apenas como alternativa de diagnóstico.
+
 Áudio permanece fora do escopo da V1.
 
 ## Resposta ao terminar uma tarefa

@@ -26,6 +26,103 @@ def _error_page(message: str) -> str:
     return """<!doctype html><title>LinguaForge</title><body style='font:16px sans-serif;background:#171923;color:#eee;padding:3rem'><h1>LinguaForge</h1><p>Could not start the local tutor.</p><pre style='white-space:pre-wrap'>%s</pre><p>Close this window, correct the local configuration, and try again.</p></body>""" % html.escape(message)
 
 
+def _setup_page(config) -> str:
+    """Cria a tela inicial sem procurar, copiar ou baixar recursos locais."""
+    values = {
+        "model": html.escape(str(config.model_path), quote=True),
+        "server": html.escape(str(config.llama_server_path), quote=True),
+        "runtime": html.escape(str(config.cuda_runtime_dir), quote=True),
+    }
+    return """<!doctype html>
+<html><head><title>LinguaForge setup</title><style>
+body { background: #171923; color: #eef0f7; font: 16px sans-serif; margin: 0; }
+main { box-sizing: border-box; max-width: 720px; margin: 0 auto; padding: 48px 32px; }
+h1 { margin: 0 0 12px; } p { color: #c4c8d6; line-height: 1.5; }
+label { display: block; font-weight: 600; margin-top: 24px; }
+small { color: #a9afc3; display: block; margin: 6px 0; }
+.path { display: flex; gap: 8px; } input { background: #252936; border: 1px solid #42495e; border-radius: 6px; color: #eef0f7; flex: 1; font: inherit; min-width: 0; padding: 10px; }
+button { background: #5b5ce2; border: 0; border-radius: 6px; color: white; cursor: pointer; font: inherit; padding: 10px 14px; }
+button.secondary { background: #363c4d; } button:disabled { cursor: wait; opacity: .65; }
+#save { margin-top: 32px; } #status { color: #ffb4ab; margin-top: 18px; min-height: 24px; white-space: pre-wrap; }
+</style></head><body><main>
+<h1>Initial setup</h1>
+<p>Select the local resources already on this computer. LinguaForge will validate their paths, but will not download, move, or copy files.</p>
+<label for="model">Model file</label><small>A GGUF model is required.</small>
+<div class="path"><input id="model" value="%(model)s"><button class="secondary" onclick="browse('model')">Browse</button></div>
+<label for="server">llama.cpp server</label><small>The executable named <code>llama-server</code> is required.</small>
+<div class="path"><input id="server" value="%(server)s"><button class="secondary" onclick="browse('server')">Browse</button></div>
+<label for="runtime">CUDA runtime</label><small>Recommended for GPU use. Leave it empty to allow the backend CPU fallback.</small>
+<div class="path"><input id="runtime" value="%(runtime)s"><button class="secondary" onclick="browse('runtime')">Browse</button></div>
+<button id="save" onclick="save()">Save and start</button><div id="status" role="alert"></div>
+</main><script>
+function status(message) { document.getElementById('status').textContent = message; }
+async function browse(kind) {
+  const result = await window.pywebview.api['select_' + kind]();
+  if (result) document.getElementById(kind).value = result;
+}
+async function save() {
+  const button = document.getElementById('save'); button.disabled = true; status('Validating local resources…');
+  const result = await window.pywebview.api.save_resources(
+    document.getElementById('model').value,
+    document.getElementById('server').value,
+    document.getElementById('runtime').value,
+  );
+  if (result.ok) { status('Starting the local tutor…'); return; }
+  status(result.error); button.disabled = false;
+}
+</script></body></html>""" % values
+
+
+def resources_are_ready(config) -> bool:
+    """Indica se há arquivos mínimos para iniciar o tutor sem adivinhar caminhos."""
+    return config.model_path.is_file() and config.llama_server_path.is_file()
+
+
+class _SetupBridge:
+    """Expõe à tela inicial somente a seleção e gravação explícitas de caminhos."""
+
+    def __init__(self, config, webview_module, start) -> None:
+        self.config = config
+        self.webview_module = webview_module
+        self.start = start
+        self.window = None
+        self.started = False
+
+    def _select(self, dialog_type: int, file_types: tuple[str, ...] = ()) -> str | None:
+        assert self.window is not None
+        selected = self.window.create_file_dialog(dialog_type, allow_multiple=False, file_types=file_types)
+        return str(selected[0]) if selected else None
+
+    def select_model(self) -> str | None:
+        return self._select(self.webview_module.FileDialog.OPEN, ("GGUF (*.gguf)",))
+
+    def select_server(self) -> str | None:
+        return self._select(self.webview_module.FileDialog.OPEN, ("All files (*.*)",))
+
+    def select_runtime(self) -> str | None:
+        return self._select(self.webview_module.FileDialog.FOLDER)
+
+    def save_resources(self, model: str, server: str, runtime: str) -> dict[str, object]:
+        if self.started:
+            return {"ok": False, "error": "The local tutor is already starting."}
+        if not model.strip() or not server.strip():
+            return {"ok": False, "error": "Select both the model file and llama.cpp server."}
+        try:
+            save_resource_paths(
+                self.config.config_dir,
+                model_path=Path(model.strip()).expanduser(),
+                llama_server_path=Path(server.strip()).expanduser(),
+                cuda_runtime_dir=Path(runtime.strip()).expanduser() if runtime.strip() else None,
+            )
+        except (OSError, ValueError) as error:
+            return {"ok": False, "error": str(error)}
+        self.started = True
+        assert self.window is not None
+        self.window.load_html(_LOADING_PAGE)
+        self.start(get_config(installed=True))
+        return {"ok": True}
+
+
 def _serve_api(config, port: int) -> tuple[uvicorn.Server, threading.Thread, socket.socket]:
     listener = socket.socket()
     listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -112,17 +209,20 @@ def main() -> None:
     try:
         webview_data = config.data_dir / "webview"
         webview_data.mkdir(parents=True, exist_ok=True)
-        window = webview.create_window("LinguaForge", html=_LOADING_PAGE, width=1050, height=760, min_size=(360, 500), text_select=True)
+        needs_setup = not args.no_model and not args.smoke_test and not resources_are_ready(config)
         state: dict[str, object] = {"server": None, "worker": None, "listener": None, "model": None}
 
-        def bootstrap() -> None:
+        window = None
+
+        def bootstrap(current_config) -> None:
             try:
-                server, worker, listener = _serve_api(config, args.port)
+                server, worker, listener = _serve_api(current_config, args.port)
                 state.update(server=server, worker=worker, listener=listener)
                 if not args.no_model:
                     state["model"] = start_or_reuse_model(
-                        config, timeout=args.model_timeout, on_process=lambda managed: state.update(model=managed)
+                        current_config, timeout=args.model_timeout, on_process=lambda managed: state.update(model=managed)
                     )
+                assert window is not None
                 window.load_url(f"http://127.0.0.1:{args.port}")
                 if args.smoke_test:
                     for _ in range(100):
@@ -143,7 +243,27 @@ def main() -> None:
                     time.sleep(0.2)
                     window.destroy()
 
-        webview.start(lambda: threading.Thread(target=bootstrap, daemon=True).start(), gui="gtk", private_mode=False, storage_path=str(webview_data))
+        def start_bootstrap(current_config) -> None:
+            threading.Thread(target=bootstrap, args=(current_config,), daemon=True).start()
+
+        if needs_setup:
+            setup = _SetupBridge(config, webview, start_bootstrap)
+            window = webview.create_window(
+                "LinguaForge",
+                html=_setup_page(config),
+                js_api=setup,
+                width=760,
+                height=720,
+                min_size=(360, 500),
+                text_select=True,
+            )
+            setup.window = window
+            webview.start(gui="gtk", private_mode=False, storage_path=str(webview_data))
+        else:
+            window = webview.create_window(
+                "LinguaForge", html=_LOADING_PAGE, width=1050, height=760, min_size=(360, 500), text_select=True
+            )
+            webview.start(lambda: start_bootstrap(config), gui="gtk", private_mode=False, storage_path=str(webview_data))
         model = state.get("model")
         if isinstance(model, ManagedModel):
             model.close()

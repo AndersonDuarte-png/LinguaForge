@@ -12,9 +12,13 @@ sudo apt install ./dist/linguaforge_0.1.0_amd64.deb
 
 O `apt` instala a dependência gráfica `gir1.2-webkit2-4.1` e suas dependências. Não instala CUDA, baixa modelo ou move chats.
 
-## Preparar os recursos locais uma única vez
+## Preparar os recursos locais na primeira abertura
 
-Indique os recursos já existentes. Os caminhos abaixo são os validados neste computador; ajuste apenas se eles estiverem em outro local.
+Na primeira abertura, a janela **Initial setup** pede o arquivo GGUF e o executável `llama-server` já existentes. O diretório do runtime CUDA é recomendado para uso da GPU, mas pode ficar vazio para permitir o fallback de CPU. Escolha os caminhos e use **Save and start**: a aplicação valida, grava a configuração e inicia na mesma janela.
+
+Esse fluxo não baixa, copia nem move modelo ou backend. Os caminhos ficam em `~/.config/linguaforge/runtime-paths.json`, com permissão de usuário.
+
+Como alternativa de diagnóstico, os mesmos caminhos podem ser configurados pelo terminal. Os caminhos abaixo são os validados neste computador; ajuste apenas se eles estiverem em outro local.
 
 ```sh
 linguaforge --configure-resources \
@@ -23,7 +27,7 @@ linguaforge --configure-resources \
   --cuda-runtime "$HOME/Repo/LinguaForge/data/llama.cpp/b10978/cuda12.8/runtime"
 ```
 
-O comando só valida e grava os caminhos em `~/.config/linguaforge/runtime-paths.json`, com permissão de usuário. Ele não copia, move nem baixa arquivos. Variáveis de ambiente `LINGUAFORGE_MODEL_PATH`, `LINGUAFORGE_LLAMA_SERVER` e `LINGUAFORGE_CUDA_RUNTIME_DIR` continuam tendo prioridade para diagnóstico.
+O comando também só valida e grava os caminhos. Variáveis de ambiente `LINGUAFORGE_MODEL_PATH`, `LINGUAFORGE_LLAMA_SERVER` e `LINGUAFORGE_CUDA_RUNTIME_DIR` continuam tendo prioridade para diagnóstico.
 
 Se houver chats no checkout antigo, importe-os antes de criar novos chats no aplicativo instalado:
 
