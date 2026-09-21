@@ -107,7 +107,7 @@ class _SetupBridge:
         return self._select(self.webview_module.FileDialog.OPEN, ("GGUF (*.gguf)",))
 
     def select_server(self) -> str | None:
-        return self._select(self.webview_module.FileDialog.OPEN, ("All files (*.*)",))
+        return self._select(self.webview_module.FileDialog.OPEN, ("llama-server (llama-server)",))
 
     def select_runtime(self) -> str | None:
         return self._select(self.webview_module.FileDialog.FOLDER)

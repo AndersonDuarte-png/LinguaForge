@@ -79,6 +79,28 @@ def test_first_run_setup_saves_resources_and_starts_without_reopening(tmp_path, 
     assert reopened == [True]
 
 
+def test_setup_server_picker_filters_for_the_server_executable(tmp_path):
+    selected = tmp_path / "llama-server"
+
+    class Webview:
+        class FileDialog:
+            OPEN = 10
+            FOLDER = 20
+
+    class Window:
+        def create_file_dialog(self, dialog_type, **kwargs):
+            self.dialog_type = dialog_type
+            self.file_types = kwargs["file_types"]
+            return (selected,)
+
+    bridge = _SetupBridge(get_config(installed=False), Webview, lambda _: None, lambda: None)
+    bridge.window = Window()
+
+    assert bridge.select_server() == str(selected)
+    assert bridge.window.dialog_type == Webview.FileDialog.OPEN
+    assert bridge.window.file_types == ("llama-server (llama-server)",)
+
+
 def test_started_model_is_terminated_by_the_session(tmp_path):
     script = tmp_path / "fake-server.py"
     script.write_text(
