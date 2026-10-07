@@ -17,3 +17,12 @@ class UserDirs:
     data_dir: Path
     config_dir: Path
     state_dir: Path
+
+
+@dataclass(frozen=True)
+class ModelBackend:
+    """Um backend gerenciado do llama.cpp (nome, executável e offload padrão)."""
+
+    name: str
+    server_path: Path
+    gpu_layers: str

@@ -7,7 +7,7 @@ from pathlib import Path
 import signal
 import subprocess
 
-from linguaforge.platform._types import LockNotAvailable, UserDirs
+from linguaforge.platform._types import LockNotAvailable, ModelBackend, UserDirs
 
 
 def _xdg_path(name: str, fallback: Path) -> Path:
@@ -55,6 +55,11 @@ def default_server_path(backend_dir: Path) -> Path:
 def default_gpu_layers() -> str:
     """Offload padrão no Linux/CUDA atual."""
     return "999"
+
+
+def model_backends(data_dir: Path) -> tuple[ModelBackend, ...]:
+    """Candidatos gerenciados: somente CUDA no Linux, sem fallback."""
+    return (ModelBackend("cuda", default_server_path(development_backend_dir(data_dir)), default_gpu_layers()),)
 
 
 def prepare_environment(cuda_runtime_dir: Path, base_env: dict[str, str]) -> dict[str, str]:

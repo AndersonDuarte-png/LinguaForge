@@ -153,6 +153,7 @@ def _server_config(tmp_path: Path):
         llama_server_path=server,
         model_path=model_path,
         state_dir=tmp_path / "state",
+        llama_server_is_explicit=True,
     )
 
 
@@ -209,6 +210,7 @@ def test_gpu_layers_default_and_env_priority(tmp_path, monkeypatch):
         llama_server_path=server,
         model_path=model_path,
         state_dir=tmp_path / "state",
+        llama_server_is_explicit=True,
     )
 
     captured: dict[str, list[str]] = {}

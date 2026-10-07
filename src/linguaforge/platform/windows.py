@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import subprocess
 
-from linguaforge.platform._types import LockNotAvailable, UserDirs
+from linguaforge.platform._types import LockNotAvailable, ModelBackend, UserDirs
 
 _APP_NAME = "LinguaForge"
 _WAIT_OBJECT_0 = 0
@@ -61,6 +61,14 @@ def default_server_path(backend_dir: Path) -> Path:
 def default_gpu_layers() -> str:
     """Offload padrão no Windows (Vulkan primário, offload completo)."""
     return "999"
+
+
+def model_backends(data_dir: Path) -> tuple[ModelBackend, ...]:
+    """Candidatos gerenciados no Windows: Vulkan primário, CPU fallback."""
+    return (
+        ModelBackend("vulkan", default_server_path(development_backend_dir(data_dir)), default_gpu_layers()),
+        ModelBackend("cpu", default_server_path(cpu_backend_dir(data_dir)), "0"),
+    )
 
 
 def prepare_environment(cuda_runtime_dir: Path, base_env: dict[str, str]) -> dict[str, str]:

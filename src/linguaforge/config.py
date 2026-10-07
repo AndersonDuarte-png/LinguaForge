@@ -26,6 +26,7 @@ class Config:
     device: str = "auto"
     interface_language: str = "en"
     target_language: str = "en"
+    llama_server_is_explicit: bool = False
 
 
 _RESOURCE_SETTINGS_FILE = "runtime-paths.json"
@@ -132,6 +133,9 @@ def get_config(*, installed: bool | None = None, platform=None) -> Config:
         server_fallback = platform.default_server_path(backend_dir)
 
     saved_paths = _saved_resource_paths(config_dir) if installed else {}
+    llama_server_is_explicit = bool(
+        os.environ.get("LINGUAFORGE_LLAMA_SERVER") or saved_paths.get("llama_server_path")
+    )
 
     return Config(
         project_root=project_root,
@@ -150,6 +154,7 @@ def get_config(*, installed: bool | None = None, platform=None) -> Config:
             "LINGUAFORGE_LLAMA_SERVER", server_fallback, saved_paths
         ),
         cuda_runtime_dir=_external_path("LINGUAFORGE_CUDA_RUNTIME_DIR", backend_dir / "runtime", saved_paths),
+        llama_server_is_explicit=llama_server_is_explicit,
     )
 
 

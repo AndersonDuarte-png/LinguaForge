@@ -133,11 +133,12 @@ HTTPServer(('127.0.0.1', port), Handler).serve_forever()
         model_path=model_path,
         cuda_runtime_dir=tmp_path / "runtime",
         state_dir=tmp_path / "state",
+        llama_server_is_explicit=True,
     )
     with socket.socket() as probe:
         probe.bind(("127.0.0.1", 0))
         port = probe.getsockname()[1]
-    config = replace(config, llama_server_path=script)
+    config = replace(config, llama_server_path=script, llama_server_is_explicit=True)
     managed = start_or_reuse_model(config, port=port, timeout=2)
     assert managed.owned
     assert managed.process is not None and managed.process.poll() is None
