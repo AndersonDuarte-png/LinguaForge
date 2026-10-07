@@ -37,6 +37,11 @@ def _free_port() -> int:
         return probe.getsockname()[1]
 
 
+def _spawn_kwargs() -> dict[str, bool]:
+    """Imita `platform.spawn_process`: encerrar o grupo no Linux exige sessão própria."""
+    return {} if sys.platform == "win32" else {"start_new_session": True}
+
+
 def _config(tmp_path: Path):
     model = tmp_path / "model.gguf"
     model.touch()
@@ -78,7 +83,11 @@ def _spawn_factory(tmp_path: Path, behaviors: dict[str, str], spawned: list, com
                 raise AssertionError(f"comportamento desconhecido: {behavior}")
             scripts[behavior] = script
         process = subprocess.Popen(
-            [sys.executable, str(script), port], stdout=stdout, stderr=subprocess.STDOUT, env=env
+            [sys.executable, str(script), port],
+            stdout=stdout,
+            stderr=subprocess.STDOUT,
+            env=env,
+            **_spawn_kwargs(),
         )
         spawned.append((server, process))
         return process

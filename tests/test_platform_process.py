@@ -37,6 +37,11 @@ def _free_port() -> int:
         return probe.getsockname()[1]
 
 
+def _spawn_kwargs() -> dict[str, bool]:
+    """Imita `platform.spawn_process`: encerrar o grupo no Linux exige sessão própria."""
+    return {} if sys.platform == "win32" else {"start_new_session": True}
+
+
 # ---- prepare_environment: funções puras testáveis em qualquer SO ----
 
 def test_linux_prepare_environment_adds_ld_library_path(tmp_path):
@@ -135,7 +140,11 @@ def _fake_spawn(script: Path, spawned: list):
     def spawn(command, *, stdout, env):
         port = command[command.index("--port") + 1]
         process = subprocess.Popen(
-            [sys.executable, str(script), port], stdout=stdout, stderr=subprocess.STDOUT, env=env
+            [sys.executable, str(script), port],
+            stdout=stdout,
+            stderr=subprocess.STDOUT,
+            env=env,
+            **_spawn_kwargs(),
         )
         spawned.append(process)
         return process
@@ -222,6 +231,7 @@ def test_gpu_layers_default_and_env_priority(tmp_path, monkeypatch):
             stdout=stdout,
             stderr=subprocess.STDOUT,
             env=env,
+            **_spawn_kwargs(),
         )
 
     calls = {"n": 0}
