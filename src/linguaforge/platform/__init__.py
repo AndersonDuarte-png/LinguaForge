@@ -19,6 +19,7 @@ spawn_process = _implementation.spawn_process
 terminate_process = _implementation.terminate_process
 valid_server_names = _implementation.valid_server_names
 development_backend_dir = _implementation.development_backend_dir
+cpu_backend_dir = _implementation.cpu_backend_dir
 default_server_path = _implementation.default_server_path
 default_gpu_layers = _implementation.default_gpu_layers
 
@@ -26,6 +27,7 @@ __all__ = [
     "FileLock",
     "LockNotAvailable",
     "UserDirs",
+    "cpu_backend_dir",
     "default_gpu_layers",
     "default_server_path",
     "development_backend_dir",

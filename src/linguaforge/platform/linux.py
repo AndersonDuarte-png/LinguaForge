@@ -42,6 +42,11 @@ def development_backend_dir(data_dir: Path) -> Path:
     return data_dir / "llama.cpp" / "b10978" / "cuda12.8"
 
 
+def cpu_backend_dir(data_dir: Path) -> Path:
+    """Backend para execução em CPU; no Linux o build CUDA também roda em CPU."""
+    return development_backend_dir(data_dir)
+
+
 def default_server_path(backend_dir: Path) -> Path:
     """Caminho padrão do executável dentro do backend de desenvolvimento."""
     return backend_dir / "bin" / "llama-b10978" / "llama-server"

@@ -44,7 +44,12 @@ def valid_server_names() -> tuple[str, ...]:
 
 
 def development_backend_dir(data_dir: Path) -> Path:
-    """Backend de desenvolvimento padrão no Windows (CPU)."""
+    """Backend de desenvolvimento padrão no Windows (Vulkan)."""
+    return data_dir / "llama.cpp" / "b10978" / "win-vulkan-x64"
+
+
+def cpu_backend_dir(data_dir: Path) -> Path:
+    """Backend CPU de desenvolvimento, preservado para o fallback do W3-C."""
     return data_dir / "llama.cpp" / "b10978" / "win-cpu-x64"
 
 
@@ -54,8 +59,8 @@ def default_server_path(backend_dir: Path) -> Path:
 
 
 def default_gpu_layers() -> str:
-    """Offload padrão no Windows CPU atual (sem GPU)."""
-    return "0"
+    """Offload padrão no Windows (Vulkan primário, offload completo)."""
+    return "999"
 
 
 def prepare_environment(cuda_runtime_dir: Path, base_env: dict[str, str]) -> dict[str, str]:

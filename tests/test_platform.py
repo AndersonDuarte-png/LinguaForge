@@ -70,7 +70,17 @@ def test_linux_development_backend_dir():
 
 def test_windows_development_backend_dir():
     data_dir = Path("D:/repo/data")
-    assert windows.development_backend_dir(data_dir) == data_dir / "llama.cpp" / "b10978" / "win-cpu-x64"
+    assert windows.development_backend_dir(data_dir) == data_dir / "llama.cpp" / "b10978" / "win-vulkan-x64"
+
+
+def test_windows_cpu_backend_dir_is_preserved():
+    data_dir = Path("D:/repo/data")
+    assert windows.cpu_backend_dir(data_dir) == data_dir / "llama.cpp" / "b10978" / "win-cpu-x64"
+
+
+def test_linux_cpu_backend_dir_matches_cuda_backend():
+    data_dir = Path("/repo/data")
+    assert linux.cpu_backend_dir(data_dir) == linux.development_backend_dir(data_dir)
 
 
 def test_linux_default_server_path():
@@ -87,5 +97,5 @@ def test_linux_default_gpu_layers_preserves_previous():
     assert linux.default_gpu_layers() == "999"
 
 
-def test_windows_default_gpu_layers_is_cpu_zero():
-    assert windows.default_gpu_layers() == "0"
+def test_windows_default_gpu_layers_is_vulkan_full_offload():
+    assert windows.default_gpu_layers() == "999"

@@ -76,9 +76,9 @@ def test_development_keeps_legacy_database_and_frontend_paths():
     assert cfg.llama_server_path == cfg.backend_dir / "bin/llama-b10978/llama-server"
 
 
-def test_development_windows_backend_points_to_win_cpu():
+def test_development_windows_backend_points_to_win_vulkan():
     cfg = config.get_config(installed=False, platform=windows)
-    assert cfg.backend_dir == cfg.project_root / "data/llama.cpp/b10978/win-cpu-x64"
+    assert cfg.backend_dir == cfg.project_root / "data/llama.cpp/b10978/win-vulkan-x64"
     assert cfg.llama_server_path == cfg.backend_dir / "llama-server.exe"
 
 
