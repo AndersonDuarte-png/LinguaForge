@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import fcntl
 import os
 from pathlib import Path
 import signal
@@ -14,6 +13,7 @@ import json
 from urllib.request import Request, urlopen
 from collections.abc import Callable
 
+from linguaforge import platform
 from linguaforge.config import Config
 
 
@@ -51,29 +51,17 @@ class InstanceLock:
     """Impede duas janelas instaladas de usarem os mesmos recursos."""
 
     def __init__(self, state_dir: Path) -> None:
-        self.path = state_dir / "linguaforge.lock"
-        self._file = None
+        self._lock = platform.FileLock(state_dir / "linguaforge.lock")
 
     def __enter__(self) -> "InstanceLock":
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self._file = self.path.open("a+")
         try:
-            fcntl.flock(self._file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError as error:
-            self._file.close()
-            self._file = None
+            self._lock.acquire()
+        except platform.LockNotAvailable as error:
             raise DesktopStartupError("LinguaForge is already running.") from error
-        self._file.seek(0)
-        self._file.truncate()
-        self._file.write(str(os.getpid()))
-        self._file.flush()
         return self
 
     def __exit__(self, *_: object) -> None:
-        if self._file is not None:
-            fcntl.flock(self._file.fileno(), fcntl.LOCK_UN)
-            self._file.close()
-            self._file = None
+        self._lock.release()
 
 
 def is_healthy(base_url: str, timeout: float = 1.0) -> bool:

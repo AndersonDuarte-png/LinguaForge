@@ -8,6 +8,8 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 
+from linguaforge import platform as _platform_module
+
 
 @dataclass(frozen=True)
 class Config:
@@ -24,13 +26,6 @@ class Config:
     device: str = "auto"
     interface_language: str = "en"
     target_language: str = "en"
-
-
-def _xdg_path(name: str, fallback: Path) -> Path:
-    """Ignora caminhos XDG relativos, conforme a especificação."""
-    value = os.environ.get(name)
-    path = Path(value) if value else fallback
-    return path if path.is_absolute() else fallback
 
 
 _RESOURCE_SETTINGS_FILE = "runtime-paths.json"
@@ -107,18 +102,20 @@ def save_resource_paths(
     return destination
 
 
-def get_config(*, installed: bool | None = None) -> Config:
+def get_config(*, installed: bool | None = None, platform=None) -> Config:
     """Resolve recursos somente de leitura e dados graváveis separadamente."""
+    if platform is None:
+        platform = _platform_module
     frozen = bool(getattr(sys, "frozen", False))
     if installed is None:
         installed = frozen
     project_root = Path(sys._MEIPASS) if frozen else Path(__file__).resolve().parents[2]
     frontend_dir = project_root / "frontend" if frozen else project_root / "frontend" / "dist"
     if installed:
-        home = Path.home()
-        data_dir = _xdg_path("XDG_DATA_HOME", home / ".local" / "share") / "linguaforge"
-        config_dir = _xdg_path("XDG_CONFIG_HOME", home / ".config") / "linguaforge"
-        state_dir = _xdg_path("XDG_STATE_HOME", home / ".local" / "state") / "linguaforge"
+        user_dirs = platform.resolve_user_dirs()
+        data_dir = user_dirs.data_dir
+        config_dir = user_dirs.config_dir
+        state_dir = user_dirs.state_dir
         models_dir = data_dir / "models"
         backend_dir = data_dir / "backends" / "llama.cpp"
     else:

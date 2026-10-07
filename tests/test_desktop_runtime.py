@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from pathlib import Path
 import socket
+import sys
 
 import pytest
 
@@ -59,6 +60,8 @@ def test_first_run_setup_saves_resources_and_starts_without_reopening(tmp_path, 
     server.chmod(0o755)
     runtime.mkdir()
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    monkeypatch.setenv("APPDATA", str(tmp_path / "config"))
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "local"))
     config = get_config(installed=True)
     started = []
 
@@ -101,6 +104,7 @@ def test_setup_server_picker_filters_for_the_server_executable(tmp_path):
     assert bridge.window.file_types == ("All files (*)",)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Lifecycle do llama-server ainda é POSIX.")
 def test_started_model_is_terminated_by_the_session(tmp_path):
     script = tmp_path / "fake-server.py"
     script.write_text(
