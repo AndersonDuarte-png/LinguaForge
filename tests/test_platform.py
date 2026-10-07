@@ -53,3 +53,39 @@ def test_windows_ignores_relative_appdata_values(monkeypatch):
 
 def test_windows_webview_gui_is_auto():
     assert windows.webview_gui() is None
+
+
+def test_linux_valid_server_names():
+    assert linux.valid_server_names() == ("llama-server",)
+
+
+def test_windows_valid_server_names_accept_exe():
+    assert "llama-server.exe" in windows.valid_server_names()
+
+
+def test_linux_development_backend_dir():
+    data_dir = Path("/repo/data")
+    assert linux.development_backend_dir(data_dir) == data_dir / "llama.cpp" / "b10978" / "cuda12.8"
+
+
+def test_windows_development_backend_dir():
+    data_dir = Path("D:/repo/data")
+    assert windows.development_backend_dir(data_dir) == data_dir / "llama.cpp" / "b10978" / "win-cpu-x64"
+
+
+def test_linux_default_server_path():
+    backend_dir = Path("/repo/data/llama.cpp/b10978/cuda12.8")
+    assert linux.default_server_path(backend_dir) == backend_dir / "bin" / "llama-b10978" / "llama-server"
+
+
+def test_windows_default_server_path():
+    backend_dir = Path("D:/repo/data/llama.cpp/b10978/win-cpu-x64")
+    assert windows.default_server_path(backend_dir) == backend_dir / "llama-server.exe"
+
+
+def test_linux_default_gpu_layers_preserves_previous():
+    assert linux.default_gpu_layers() == "999"
+
+
+def test_windows_default_gpu_layers_is_cpu_zero():
+    assert windows.default_gpu_layers() == "0"

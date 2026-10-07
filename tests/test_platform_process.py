@@ -193,3 +193,53 @@ def test_windows_startup_failure_terminates_owned_process(tmp_path, monkeypatch)
         start_or_reuse_model(_server_config(tmp_path), port=_free_port(), timeout=0.4)
 
     assert spawned and spawned[0].poll() is not None
+
+
+def test_gpu_layers_default_and_env_priority(tmp_path, monkeypatch):
+    """Default vem da plataforma; LLAMA_GPU_LAYERS explícita tem prioridade."""
+    from linguaforge import platform
+
+    model_path = tmp_path / "model.gguf"
+    model_path.touch()
+    server = tmp_path / "llama-server"
+    server.touch()
+    server.chmod(0o755)
+    config = replace(
+        get_config(installed=False),
+        llama_server_path=server,
+        model_path=model_path,
+        state_dir=tmp_path / "state",
+    )
+
+    captured: dict[str, list[str]] = {}
+
+    def spawn(command, *, stdout, env):
+        captured["command"] = list(command)
+        return subprocess.Popen(
+            [sys.executable, "-c", "import time; time.sleep(60)"],
+            stdout=stdout,
+            stderr=subprocess.STDOUT,
+            env=env,
+        )
+
+    calls = {"n": 0}
+
+    def healthy(base_url, timeout=1.0):
+        calls["n"] += 1
+        return calls["n"] > 1  # reuse check: False; wait_for_health: True
+
+    monkeypatch.setattr("linguaforge.desktop_runtime.is_healthy", healthy)
+    monkeypatch.setattr("linguaforge.platform.spawn_process", spawn)
+
+    managed = start_or_reuse_model(config, timeout=1)
+    managed.close()
+    index = captured["command"].index("--gpu-layers")
+    assert captured["command"][index + 1] == platform.default_gpu_layers()
+
+    monkeypatch.setenv("LLAMA_GPU_LAYERS", "7")
+    captured.clear()
+    calls["n"] = 0
+    managed = start_or_reuse_model(config, timeout=1)
+    managed.close()
+    index = captured["command"].index("--gpu-layers")
+    assert captured["command"][index + 1] == "7"

@@ -32,6 +32,26 @@ def webview_gui() -> str | None:
     return "gtk"
 
 
+def valid_server_names() -> tuple[str, ...]:
+    """Nomes aceitos para o executável do llama.cpp no Linux."""
+    return ("llama-server",)
+
+
+def development_backend_dir(data_dir: Path) -> Path:
+    """Backend de desenvolvimento padrão no Linux (CUDA)."""
+    return data_dir / "llama.cpp" / "b10978" / "cuda12.8"
+
+
+def default_server_path(backend_dir: Path) -> Path:
+    """Caminho padrão do executável dentro do backend de desenvolvimento."""
+    return backend_dir / "bin" / "llama-b10978" / "llama-server"
+
+
+def default_gpu_layers() -> str:
+    """Offload padrão no Linux/CUDA atual."""
+    return "999"
+
+
 def prepare_environment(cuda_runtime_dir: Path, base_env: dict[str, str]) -> dict[str, str]:
     """Expõe o runtime CUDA via LD_LIBRARY_PATH somente no processo filho."""
     environment = base_env.copy()

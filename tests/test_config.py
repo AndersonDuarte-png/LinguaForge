@@ -4,7 +4,7 @@ import sys
 import pytest
 
 from linguaforge import config
-from linguaforge.platform import linux
+from linguaforge.platform import linux, windows
 
 
 def test_config_paths_and_defaults():
@@ -69,10 +69,26 @@ def test_relative_xdg_is_ignored_and_external_models_can_be_reused(tmp_path, mon
 
 
 def test_development_keeps_legacy_database_and_frontend_paths():
-    cfg = config.get_config(installed=False)
+    cfg = config.get_config(installed=False, platform=linux)
     assert cfg.data_dir == cfg.project_root / "data"
     assert cfg.frontend_dir == cfg.project_root / "frontend/dist"
     assert cfg.backend_dir == cfg.data_dir / "llama.cpp/b10978/cuda12.8"
+    assert cfg.llama_server_path == cfg.backend_dir / "bin/llama-b10978/llama-server"
+
+
+def test_development_windows_backend_points_to_win_cpu():
+    cfg = config.get_config(installed=False, platform=windows)
+    assert cfg.backend_dir == cfg.project_root / "data/llama.cpp/b10978/win-cpu-x64"
+    assert cfg.llama_server_path == cfg.backend_dir / "llama-server.exe"
+
+
+def test_save_resource_paths_accepts_platform_server_name(tmp_path):
+    from linguaforge import platform as current_platform
+
+    server = tmp_path / current_platform.valid_server_names()[0]
+    server.touch()
+    server.chmod(0o755)
+    config.save_resource_paths(tmp_path, llama_server_path=server)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Permissões de arquivo 0600 são POSIX.")

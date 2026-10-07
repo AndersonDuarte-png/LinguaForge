@@ -113,7 +113,7 @@ def start_or_reuse_model(
         "--model", str(config.model_path),
         "--host", host,
         "--port", str(port),
-        "--gpu-layers", os.environ.get("LLAMA_GPU_LAYERS", "999"),
+        "--gpu-layers", os.environ.get("LLAMA_GPU_LAYERS", platform.default_gpu_layers()),
         "--ctx-size", os.environ.get("LLAMA_CONTEXT_SIZE", "4096"),
         "--parallel", os.environ.get("LLAMA_PARALLEL_SLOTS", "1"),
     ]

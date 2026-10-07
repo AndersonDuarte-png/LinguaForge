@@ -67,8 +67,11 @@ def save_resource_paths(
     model_path: Path | None = None,
     llama_server_path: Path | None = None,
     cuda_runtime_dir: Path | None = None,
+    platform=None,
 ) -> Path:
     """Salva caminhos locais escolhidos pelo usuário sem copiar modelos ou backend."""
+    if platform is None:
+        platform = _platform_module
     supplied = {
         "model_path": model_path,
         "llama_server_path": llama_server_path,
@@ -88,8 +91,9 @@ def save_resource_paths(
                 raise ValueError(f"Diretório não encontrado: {path}")
         elif not path.is_file():
             raise ValueError(f"Arquivo não encontrado: {path}")
-        elif key == "llama_server_path" and path.name != "llama-server":
-            raise ValueError(f"Select the executable named llama-server: {path}")
+        elif key == "llama_server_path" and path.name not in platform.valid_server_names():
+            names = " or ".join(platform.valid_server_names())
+            raise ValueError(f"Select the executable named {names}: {path}")
         elif key == "llama_server_path" and not os.access(path, os.X_OK):
             raise ValueError(f"Backend sem permissão de execução: {path}")
         current[key] = str(path)
@@ -118,12 +122,14 @@ def get_config(*, installed: bool | None = None, platform=None) -> Config:
         state_dir = user_dirs.state_dir
         models_dir = data_dir / "models"
         backend_dir = data_dir / "backends" / "llama.cpp"
+        server_fallback = backend_dir / "bin" / "llama-b10978" / "llama-server"
     else:
         data_dir = project_root / "data"
         models_dir = project_root / "models"
         config_dir = data_dir / "config"
         state_dir = data_dir / "state"
-        backend_dir = data_dir / "llama.cpp" / "b10978" / "cuda12.8"
+        backend_dir = platform.development_backend_dir(data_dir)
+        server_fallback = platform.default_server_path(backend_dir)
 
     saved_paths = _saved_resource_paths(config_dir) if installed else {}
 
@@ -141,7 +147,7 @@ def get_config(*, installed: bool | None = None, platform=None) -> Config:
             saved_paths,
         ),
         llama_server_path=_external_path(
-            "LINGUAFORGE_LLAMA_SERVER", backend_dir / "bin" / "llama-b10978" / "llama-server", saved_paths
+            "LINGUAFORGE_LLAMA_SERVER", server_fallback, saved_paths
         ),
         cuda_runtime_dir=_external_path("LINGUAFORGE_CUDA_RUNTIME_DIR", backend_dir / "runtime", saved_paths),
     )

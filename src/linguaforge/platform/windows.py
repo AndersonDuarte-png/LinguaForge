@@ -38,6 +38,26 @@ def webview_gui() -> str | None:
     return None
 
 
+def valid_server_names() -> tuple[str, ...]:
+    """Nomes aceitos para o executável do llama.cpp no Windows."""
+    return ("llama-server.exe", "llama-server")
+
+
+def development_backend_dir(data_dir: Path) -> Path:
+    """Backend de desenvolvimento padrão no Windows (CPU)."""
+    return data_dir / "llama.cpp" / "b10978" / "win-cpu-x64"
+
+
+def default_server_path(backend_dir: Path) -> Path:
+    """Caminho padrão do executável dentro do backend de desenvolvimento."""
+    return backend_dir / "llama-server.exe"
+
+
+def default_gpu_layers() -> str:
+    """Offload padrão no Windows CPU atual (sem GPU)."""
+    return "0"
+
+
 def prepare_environment(cuda_runtime_dir: Path, base_env: dict[str, str]) -> dict[str, str]:
     """O Windows não usa LD_LIBRARY_PATH; o ambiente é repassado sem alterações."""
     return base_env.copy()

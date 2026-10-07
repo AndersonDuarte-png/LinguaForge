@@ -83,7 +83,7 @@ def resources_are_ready(config) -> bool:
     """Indica se há arquivos mínimos para iniciar o tutor sem adivinhar caminhos."""
     return (
         config.model_path.is_file()
-        and config.llama_server_path.name == "llama-server"
+        and config.llama_server_path.name in platform.valid_server_names()
         and config.llama_server_path.is_file()
     )
 
