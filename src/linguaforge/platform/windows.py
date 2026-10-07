@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import os
 from pathlib import Path
+import subprocess
 
 from linguaforge.platform._types import LockNotAvailable, UserDirs
 
@@ -35,6 +36,36 @@ def resolve_user_dirs() -> UserDirs:
 def webview_gui() -> str | None:
     """Deixa o pywebview escolher o backend nativo (WebView2)."""
     return None
+
+
+def prepare_environment(cuda_runtime_dir: Path, base_env: dict[str, str]) -> dict[str, str]:
+    """O Windows não usa LD_LIBRARY_PATH; o ambiente é repassado sem alterações."""
+    return base_env.copy()
+
+
+def spawn_process(command: list[str], *, stdout, env: dict[str, str]) -> subprocess.Popen[bytes]:
+    """Inicia o processo sem abrir janela de console."""
+    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    return subprocess.Popen(
+        command, stdout=stdout, stderr=subprocess.STDOUT, env=env, creationflags=creationflags
+    )
+
+
+def terminate_process(
+    process: subprocess.Popen[bytes], *, graceful_timeout: float = 8.0, force_timeout: float = 3.0
+) -> None:
+    """TerminateProcess imediato; kill() como fallback idempotente."""
+    if process.poll() is not None:
+        return
+    process.terminate()
+    try:
+        process.wait(timeout=graceful_timeout)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        try:
+            process.wait(timeout=force_timeout)
+        except subprocess.TimeoutExpired:
+            pass
 
 
 def _kernel32():

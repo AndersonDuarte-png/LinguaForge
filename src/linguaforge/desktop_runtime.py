@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 import os
 from pathlib import Path
-import signal
 import socket
 import subprocess
 import time
@@ -34,17 +33,9 @@ class ManagedModel:
 
     def close(self) -> None:
         """Encerra somente o processo iniciado por esta sessão."""
-        if self.process is None or self.process.poll() is not None:
+        if self.process is None:
             return
-        try:
-            os.killpg(self.process.pid, signal.SIGTERM)
-            self.process.wait(timeout=8)
-        except (ProcessLookupError, subprocess.TimeoutExpired):
-            try:
-                os.killpg(self.process.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-            self.process.wait(timeout=3)
+        platform.terminate_process(self.process)
 
 
 class InstanceLock:
@@ -116,9 +107,7 @@ def start_or_reuse_model(
         raise DesktopStartupError(f"O backend não tem permissão de execução: {config.llama_server_path}")
     config.state_dir.mkdir(parents=True, exist_ok=True)
     log_path = config.state_dir / "llama-server.log"
-    environment = os.environ.copy()
-    if config.cuda_runtime_dir.is_dir():
-        environment["LD_LIBRARY_PATH"] = f"{config.cuda_runtime_dir}:{environment.get('LD_LIBRARY_PATH', '')}".rstrip(":")
+    environment = platform.prepare_environment(config.cuda_runtime_dir, os.environ.copy())
     command = [
         str(config.llama_server_path),
         "--model", str(config.model_path),
@@ -129,7 +118,7 @@ def start_or_reuse_model(
         "--parallel", os.environ.get("LLAMA_PARALLEL_SLOTS", "1"),
     ]
     log = log_path.open("ab")
-    process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, env=environment, start_new_session=True)
+    process = platform.spawn_process(command, stdout=log, env=environment)
     log.close()
     managed = ManagedModel(process, base_url)
     if on_process is not None:
