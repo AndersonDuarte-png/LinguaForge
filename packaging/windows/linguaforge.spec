@@ -47,5 +47,6 @@ executable = EXE(
     exclude_binaries=True,
     name="LinguaForge",
     console=False,
+    icon=str(root / "packaging" / "windows" / "linguaforge.ico"),
 )
 collection = COLLECT(executable, analysis.binaries, analysis.datas, name="LinguaForge")

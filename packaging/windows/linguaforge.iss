@@ -9,6 +9,7 @@
 #define AppName "LinguaForge"
 #define AppId "{{fe274a9c-379e-48c9-9b35-590611ae033b}"
 #define AppExeName "LinguaForge.exe"
+#define AppIcon "linguaforge.ico"
 
 [Setup]
 AppId={#AppId}
@@ -24,6 +25,7 @@ ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 OutputBaseFilename=LinguaForge-{#AppVersion}-Setup
 OutputDir=..\..\installer
+SetupIconFile={#AppIcon}
 UninstallDisplayIcon={app}\{#AppExeName}
 UninstallDisplayName={#AppName} {#AppVersion}
 Compression=lzma2
