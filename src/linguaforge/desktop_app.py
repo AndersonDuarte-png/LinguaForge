@@ -81,10 +81,16 @@ async function save() {
 
 def resources_are_ready(config) -> bool:
     """Indica se há arquivos mínimos para iniciar o tutor sem adivinhar caminhos."""
-    return (
-        config.model_path.is_file()
-        and config.llama_server_path.name in platform.valid_server_names()
-        and config.llama_server_path.is_file()
+    if not config.model_path.is_file():
+        return False
+    if config.llama_server_is_explicit:
+        return (
+            config.llama_server_path.name in platform.valid_server_names()
+            and config.llama_server_path.is_file()
+        )
+    return any(
+        backend.server_path.is_file()
+        for backend in platform.model_backends(config.managed_backends_dir)
     )
 
 

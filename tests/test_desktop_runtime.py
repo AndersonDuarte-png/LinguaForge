@@ -39,6 +39,7 @@ def test_resources_are_ready_requires_existing_model_and_server(tmp_path):
         get_config(installed=False),
         model_path=tmp_path / "model.gguf",
         llama_server_path=tmp_path / "llama-server",
+        llama_server_is_explicit=True,
     )
     assert not resources_are_ready(config)
     config.model_path.touch()
@@ -49,6 +50,26 @@ def test_resources_are_ready_requires_existing_model_and_server(tmp_path):
     config = replace(config, llama_server_path=invalid_server)
     invalid_server.touch()
     assert not resources_are_ready(config)
+
+
+def test_resources_are_ready_checks_managed_backends(tmp_path, monkeypatch):
+    from linguaforge.platform import ModelBackend
+
+    model = tmp_path / "model.gguf"
+    model.touch()
+    vulkan = tmp_path / "vulkan.exe"
+    cpu = tmp_path / "cpu.exe"
+    monkeypatch.setattr(
+        "linguaforge.platform.model_backends",
+        lambda _root: (ModelBackend("vulkan", vulkan, "999"), ModelBackend("cpu", cpu, "0")),
+    )
+    config = replace(get_config(installed=False), model_path=model)
+
+    assert not resources_are_ready(config)  # nenhum backend presente
+    cpu.touch()
+    assert resources_are_ready(config)  # CPU basta (Vulkan ausente)
+    vulkan.touch()
+    assert resources_are_ready(config)  # ambos presentes
 
 
 def test_first_run_setup_saves_resources_and_starts_without_reopening(tmp_path, monkeypatch):
