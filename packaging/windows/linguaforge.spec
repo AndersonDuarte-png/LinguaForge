@@ -3,16 +3,30 @@ from pathlib import Path
 
 root = Path(SPECPATH).parent.parent  # raiz do repositório
 
+
+def _flat_files(source: Path, dest_dir: str) -> list[tuple[str, str]]:
+    """Lista os arquivos do backend flat, excluindo marcadores de provisionamento.
+
+    O segundo elemento de cada entrada de `datas` é um diretório de destino:
+    o PyInstaller coloca o arquivo em `dest_dir/<nome-do-arquivo>`.
+    """
+    return [
+        (str(path), dest_dir)
+        for path in sorted(source.iterdir())
+        if path.is_file() and path.name != ".provisioned"
+    ]
+
+
 datas = [
     # Frontend compilado (recurso da aplicação, servido do resource root).
     (str(root / "frontend" / "dist"), "frontend"),
     # Backends llama.cpp gerenciados: Vulkan primary + CPU fallback.
-    (
-        str(root / "data" / "llama.cpp" / "b10978" / "win-vulkan-x64"),
+    *_flat_files(
+        root / "data" / "llama.cpp" / "b10978" / "win-vulkan-x64",
         "backends/llama.cpp/b10978/win-vulkan-x64",
     ),
-    (
-        str(root / "data" / "llama.cpp" / "b10978" / "win-cpu-x64"),
+    *_flat_files(
+        root / "data" / "llama.cpp" / "b10978" / "win-cpu-x64",
         "backends/llama.cpp/b10978/win-cpu-x64",
     ),
 ]
