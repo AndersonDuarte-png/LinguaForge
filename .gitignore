@@ -9,6 +9,7 @@ __pycache__/
 .venv-desktop/
 build/
 dist/
+installer/
 
 # Environment variables
 .env

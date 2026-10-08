@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from pathlib import Path
 import socket
+import sys
 
 import pytest
 
@@ -38,6 +39,7 @@ def test_resources_are_ready_requires_existing_model_and_server(tmp_path):
         get_config(installed=False),
         model_path=tmp_path / "model.gguf",
         llama_server_path=tmp_path / "llama-server",
+        llama_server_is_explicit=True,
     )
     assert not resources_are_ready(config)
     config.model_path.touch()
@@ -50,6 +52,26 @@ def test_resources_are_ready_requires_existing_model_and_server(tmp_path):
     assert not resources_are_ready(config)
 
 
+def test_resources_are_ready_checks_managed_backends(tmp_path, monkeypatch):
+    from linguaforge.platform import ModelBackend
+
+    model = tmp_path / "model.gguf"
+    model.touch()
+    vulkan = tmp_path / "vulkan.exe"
+    cpu = tmp_path / "cpu.exe"
+    monkeypatch.setattr(
+        "linguaforge.platform.model_backends",
+        lambda _root: (ModelBackend("vulkan", vulkan, "999"), ModelBackend("cpu", cpu, "0")),
+    )
+    config = replace(get_config(installed=False), model_path=model)
+
+    assert not resources_are_ready(config)  # nenhum backend presente
+    cpu.touch()
+    assert resources_are_ready(config)  # CPU basta (Vulkan ausente)
+    vulkan.touch()
+    assert resources_are_ready(config)  # ambos presentes
+
+
 def test_first_run_setup_saves_resources_and_starts_without_reopening(tmp_path, monkeypatch):
     model = tmp_path / "model.gguf"
     server = tmp_path / "llama-server"
@@ -59,6 +81,8 @@ def test_first_run_setup_saves_resources_and_starts_without_reopening(tmp_path, 
     server.chmod(0o755)
     runtime.mkdir()
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    monkeypatch.setenv("APPDATA", str(tmp_path / "config"))
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "local"))
     config = get_config(installed=True)
     started = []
 
@@ -101,6 +125,7 @@ def test_setup_server_picker_filters_for_the_server_executable(tmp_path):
     assert bridge.window.file_types == ("All files (*)",)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Lifecycle do llama-server ainda é POSIX.")
 def test_started_model_is_terminated_by_the_session(tmp_path):
     script = tmp_path / "fake-server.py"
     script.write_text(
@@ -129,11 +154,12 @@ HTTPServer(('127.0.0.1', port), Handler).serve_forever()
         model_path=model_path,
         cuda_runtime_dir=tmp_path / "runtime",
         state_dir=tmp_path / "state",
+        llama_server_is_explicit=True,
     )
     with socket.socket() as probe:
         probe.bind(("127.0.0.1", 0))
         port = probe.getsockname()[1]
-    config = replace(config, llama_server_path=script)
+    config = replace(config, llama_server_path=script, llama_server_is_explicit=True)
     managed = start_or_reuse_model(config, port=port, timeout=2)
     assert managed.owned
     assert managed.process is not None and managed.process.poll() is None

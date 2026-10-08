@@ -13,6 +13,7 @@ import time
 
 import uvicorn
 
+from linguaforge import platform
 from linguaforge.config import get_config, save_resource_paths
 from linguaforge.desktop_runtime import DesktopStartupError, InstanceLock, ManagedModel, start_or_reuse_model
 from linguaforge.storage_import import import_chat_history
@@ -80,10 +81,16 @@ async function save() {
 
 def resources_are_ready(config) -> bool:
     """Indica se há arquivos mínimos para iniciar o tutor sem adivinhar caminhos."""
-    return (
-        config.model_path.is_file()
-        and config.llama_server_path.name == "llama-server"
-        and config.llama_server_path.is_file()
+    if not config.model_path.is_file():
+        return False
+    if config.llama_server_is_explicit:
+        return (
+            config.llama_server_path.name in platform.valid_server_names()
+            and config.llama_server_path.is_file()
+        )
+    return any(
+        backend.server_path.is_file()
+        for backend in platform.model_backends(config.managed_backends_dir)
     )
 
 
@@ -220,7 +227,7 @@ def main() -> None:
         lock.__enter__()
     except DesktopStartupError as error:
         webview.create_window("LinguaForge", html=_error_page(str(error)), width=560, height=360)
-        webview.start(gui="gtk", private_mode=True)
+        webview.start(gui=platform.webview_gui(), private_mode=True)
         return
     try:
         webview_data = config.data_dir / "webview"
@@ -264,7 +271,7 @@ def main() -> None:
                             restored = window.evaluate_js("localStorage.getItem('linguaforge.packagingSmoke') === 'saved'")
                             window.evaluate_js("localStorage.setItem('linguaforge.packagingSmoke', 'saved')")
                             print(f"WebView storage restored: {str(restored).lower()}", flush=True)
-                            print("Desktop smoke test passed: Vue rendered in GTK/WebKit.", flush=True)
+                            print("Desktop smoke test passed: Vue rendered in desktop webview.", flush=True)
                             time.sleep(args.smoke_hold_seconds)
                             window.destroy()
                             return
@@ -303,7 +310,7 @@ def main() -> None:
                 text_select=True,
             )
             setup.window = window
-            webview.start(gui="gtk", private_mode=False, storage_path=str(webview_data))
+            webview.start(gui=platform.webview_gui(), private_mode=False, storage_path=str(webview_data))
         else:
             window = webview.create_window(
                 "LinguaForge",
@@ -314,7 +321,7 @@ def main() -> None:
                 min_size=(360, 500),
                 text_select=True,
             )
-            webview.start(lambda: start_bootstrap(config), gui="gtk", private_mode=False, storage_path=str(webview_data))
+            webview.start(lambda: start_bootstrap(config), gui=platform.webview_gui(), private_mode=False, storage_path=str(webview_data))
         stop_services()
         error = state.get("error")
         if args.smoke_test and isinstance(error, Exception):

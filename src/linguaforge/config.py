@@ -8,6 +8,8 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 
+from linguaforge import platform as _platform_module
+
 
 @dataclass(frozen=True)
 class Config:
@@ -18,19 +20,14 @@ class Config:
     config_dir: Path
     state_dir: Path
     backend_dir: Path
+    managed_backends_dir: Path
     model_path: Path
     llama_server_path: Path
     cuda_runtime_dir: Path
     device: str = "auto"
     interface_language: str = "en"
     target_language: str = "en"
-
-
-def _xdg_path(name: str, fallback: Path) -> Path:
-    """Ignora caminhos XDG relativos, conforme a especificação."""
-    value = os.environ.get(name)
-    path = Path(value) if value else fallback
-    return path if path.is_absolute() else fallback
+    llama_server_is_explicit: bool = False
 
 
 _RESOURCE_SETTINGS_FILE = "runtime-paths.json"
@@ -72,8 +69,11 @@ def save_resource_paths(
     model_path: Path | None = None,
     llama_server_path: Path | None = None,
     cuda_runtime_dir: Path | None = None,
+    platform=None,
 ) -> Path:
     """Salva caminhos locais escolhidos pelo usuário sem copiar modelos ou backend."""
+    if platform is None:
+        platform = _platform_module
     supplied = {
         "model_path": model_path,
         "llama_server_path": llama_server_path,
@@ -93,8 +93,9 @@ def save_resource_paths(
                 raise ValueError(f"Diretório não encontrado: {path}")
         elif not path.is_file():
             raise ValueError(f"Arquivo não encontrado: {path}")
-        elif key == "llama_server_path" and path.name != "llama-server":
-            raise ValueError(f"Select the executable named llama-server: {path}")
+        elif key == "llama_server_path" and path.name not in platform.valid_server_names():
+            names = " or ".join(platform.valid_server_names())
+            raise ValueError(f"Select the executable named {names}: {path}")
         elif key == "llama_server_path" and not os.access(path, os.X_OK):
             raise ValueError(f"Backend sem permissão de execução: {path}")
         current[key] = str(path)
@@ -107,28 +108,43 @@ def save_resource_paths(
     return destination
 
 
-def get_config(*, installed: bool | None = None) -> Config:
-    """Resolve recursos somente de leitura e dados graváveis separadamente."""
+def get_config(*, installed: bool | None = None, platform=None) -> Config:
+    """Resolve recursos somente de leitura e dados graváveis separadamente.
+
+    ``project_root`` é o application resource root: ``sys._MEIPASS`` quando
+    frozen, ou a raiz do repositório em desenvolvimento. Backends gerenciados,
+    frontend e demais recursos imutáveis ficam sob ele; dados e configuração do
+    usuário ficam em diretórios graváveis separados.
+    """
+    if platform is None:
+        platform = _platform_module
     frozen = bool(getattr(sys, "frozen", False))
     if installed is None:
         installed = frozen
     project_root = Path(sys._MEIPASS) if frozen else Path(__file__).resolve().parents[2]
     frontend_dir = project_root / "frontend" if frozen else project_root / "frontend" / "dist"
     if installed:
-        home = Path.home()
-        data_dir = _xdg_path("XDG_DATA_HOME", home / ".local" / "share") / "linguaforge"
-        config_dir = _xdg_path("XDG_CONFIG_HOME", home / ".config") / "linguaforge"
-        state_dir = _xdg_path("XDG_STATE_HOME", home / ".local" / "state") / "linguaforge"
+        user_dirs = platform.resolve_user_dirs()
+        data_dir = user_dirs.data_dir
+        config_dir = user_dirs.config_dir
+        state_dir = user_dirs.state_dir
         models_dir = data_dir / "models"
         backend_dir = data_dir / "backends" / "llama.cpp"
+        server_fallback = backend_dir / "bin" / "llama-b10978" / "llama-server"
+        managed_backends_dir = platform.installed_backends_root(project_root, data_dir)
     else:
         data_dir = project_root / "data"
         models_dir = project_root / "models"
         config_dir = data_dir / "config"
         state_dir = data_dir / "state"
-        backend_dir = data_dir / "llama.cpp" / "b10978" / "cuda12.8"
+        backend_dir = platform.development_backend_dir(data_dir)
+        server_fallback = platform.default_server_path(backend_dir)
+        managed_backends_dir = data_dir
 
     saved_paths = _saved_resource_paths(config_dir) if installed else {}
+    llama_server_is_explicit = bool(
+        os.environ.get("LINGUAFORGE_LLAMA_SERVER") or saved_paths.get("llama_server_path")
+    )
 
     return Config(
         project_root=project_root,
@@ -138,15 +154,17 @@ def get_config(*, installed: bool | None = None) -> Config:
         config_dir=config_dir,
         state_dir=state_dir,
         backend_dir=backend_dir,
+        managed_backends_dir=managed_backends_dir,
         model_path=_external_path(
             "LINGUAFORGE_MODEL_PATH",
             models_dir / "Qwen3-4B-Instruct-2507" / "Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
             saved_paths,
         ),
         llama_server_path=_external_path(
-            "LINGUAFORGE_LLAMA_SERVER", backend_dir / "bin" / "llama-b10978" / "llama-server", saved_paths
+            "LINGUAFORGE_LLAMA_SERVER", server_fallback, saved_paths
         ),
         cuda_runtime_dir=_external_path("LINGUAFORGE_CUDA_RUNTIME_DIR", backend_dir / "runtime", saved_paths),
+        llama_server_is_explicit=llama_server_is_explicit,
     )
 
 

@@ -1,8 +1,10 @@
 from pathlib import Path
+import sys
 
 import pytest
 
 from linguaforge import config
+from linguaforge.platform import linux, windows
 
 
 def test_config_paths_and_defaults():
@@ -36,7 +38,7 @@ def test_config_paths_are_independent_of_working_directory(tmp_path, monkeypatch
 def test_installed_paths_use_xdg_and_do_not_create_directories(tmp_path, monkeypatch):
     for variable, folder in [("XDG_DATA_HOME", "data"), ("XDG_CONFIG_HOME", "config"), ("XDG_STATE_HOME", "state")]:
         monkeypatch.setenv(variable, str(tmp_path / folder))
-    cfg = config.get_config(installed=True)
+    cfg = config.get_config(installed=True, platform=linux)
     assert cfg.data_dir == tmp_path / "data/linguaforge"
     assert cfg.config_dir == tmp_path / "config/linguaforge"
     assert cfg.state_dir == tmp_path / "state/linguaforge"
@@ -50,7 +52,7 @@ def test_frozen_resources_are_separate_from_writable_paths(tmp_path, monkeypatch
     monkeypatch.setattr(config.sys, "_MEIPASS", str(tmp_path / "bundle/_internal"), raising=False)
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "user-data"))
     monkeypatch.chdir(tmp_path)
-    cfg = config.get_config()
+    cfg = config.get_config(platform=linux)
     assert cfg.frontend_dir == tmp_path / "bundle/_internal/frontend"
     assert cfg.data_dir == tmp_path / "user-data/linguaforge"
     assert not cfg.data_dir.is_relative_to(cfg.project_root)
@@ -60,19 +62,82 @@ def test_relative_xdg_is_ignored_and_external_models_can_be_reused(tmp_path, mon
     monkeypatch.setenv("XDG_DATA_HOME", "relative")
     existing_model = tmp_path / "existing.gguf"
     monkeypatch.setenv("LINGUAFORGE_MODEL_PATH", str(existing_model))
-    cfg = config.get_config(installed=True)
+    cfg = config.get_config(installed=True, platform=linux)
     assert cfg.data_dir == Path.home() / ".local/share/linguaforge"
     assert cfg.model_path == existing_model
     assert not existing_model.exists()
 
 
 def test_development_keeps_legacy_database_and_frontend_paths():
-    cfg = config.get_config(installed=False)
+    cfg = config.get_config(installed=False, platform=linux)
     assert cfg.data_dir == cfg.project_root / "data"
     assert cfg.frontend_dir == cfg.project_root / "frontend/dist"
     assert cfg.backend_dir == cfg.data_dir / "llama.cpp/b10978/cuda12.8"
+    assert cfg.llama_server_path == cfg.backend_dir / "bin/llama-b10978/llama-server"
 
 
+def test_development_windows_backend_points_to_win_vulkan():
+    cfg = config.get_config(installed=False, platform=windows)
+    assert cfg.backend_dir == cfg.project_root / "data/llama.cpp/b10978/win-vulkan-x64"
+    assert cfg.llama_server_path == cfg.backend_dir / "llama-server.exe"
+    assert cfg.managed_backends_dir == cfg.data_dir
+
+
+def test_windows_installed_backends_come_from_resource_root(tmp_path, monkeypatch):
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "local"))
+    monkeypatch.setenv("APPDATA", str(tmp_path / "roaming"))
+    cfg = config.get_config(installed=True, platform=windows)
+
+    assert cfg.managed_backends_dir == cfg.project_root / "backends"
+    assert cfg.data_dir == tmp_path / "local" / "LinguaForge"
+    assert cfg.config_dir == tmp_path / "roaming" / "LinguaForge"
+
+    backends = windows.model_backends(cfg.managed_backends_dir)
+    assert backends[0].name == "vulkan"
+    assert backends[0].server_path == cfg.project_root / "backends/llama.cpp/b10978/win-vulkan-x64/llama-server.exe"
+    assert backends[1].name == "cpu"
+    assert backends[1].server_path == cfg.project_root / "backends/llama.cpp/b10978/win-cpu-x64/llama-server.exe"
+    # dados graváveis não apontam para a raiz da aplicação
+    assert not cfg.data_dir.is_relative_to(cfg.project_root)
+
+
+def test_windows_frozen_resources_separate_from_user_data(tmp_path, monkeypatch):
+    bundle = tmp_path / "bundle/_internal"
+    monkeypatch.setattr(config.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(config.sys, "_MEIPASS", str(bundle), raising=False)
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "local"))
+    monkeypatch.setenv("APPDATA", str(tmp_path / "roaming"))
+    monkeypatch.chdir(tmp_path)
+    cfg = config.get_config(platform=windows)
+
+    assert cfg.frontend_dir == bundle / "frontend"
+    assert cfg.managed_backends_dir == bundle / "backends"
+    assert cfg.data_dir == tmp_path / "local" / "LinguaForge"
+    assert cfg.config_dir == tmp_path / "roaming" / "LinguaForge"
+    assert not cfg.data_dir.is_relative_to(cfg.project_root)
+
+
+def test_linux_installed_managed_backends_stay_in_data_dir(tmp_path, monkeypatch):
+    for variable, folder in [("XDG_DATA_HOME", "data"), ("XDG_CONFIG_HOME", "config"), ("XDG_STATE_HOME", "state")]:
+        monkeypatch.setenv(variable, str(tmp_path / folder))
+    cfg = config.get_config(installed=True, platform=linux)
+
+    assert cfg.managed_backends_dir == cfg.data_dir
+    backends = linux.model_backends(cfg.managed_backends_dir)
+    assert backends[0].name == "cuda"
+    assert backends[0].server_path == cfg.data_dir / "llama.cpp/b10978/cuda12.8/bin/llama-b10978/llama-server"
+
+
+def test_save_resource_paths_accepts_platform_server_name(tmp_path):
+    from linguaforge import platform as current_platform
+
+    server = tmp_path / current_platform.valid_server_names()[0]
+    server.touch()
+    server.chmod(0o755)
+    config.save_resource_paths(tmp_path, llama_server_path=server)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Permissões de arquivo 0600 são POSIX.")
 def test_saved_resource_paths_are_used_only_by_installed_application(tmp_path, monkeypatch):
     for variable, folder in [("XDG_DATA_HOME", "data"), ("XDG_CONFIG_HOME", "config"), ("XDG_STATE_HOME", "state")]:
         monkeypatch.setenv(variable, str(tmp_path / folder))
@@ -90,7 +155,7 @@ def test_saved_resource_paths_are_used_only_by_installed_application(tmp_path, m
         llama_server_path=server,
         cuda_runtime_dir=runtime,
     )
-    installed = config.get_config(installed=True)
+    installed = config.get_config(installed=True, platform=linux)
     development = config.get_config(installed=False)
     assert settings.stat().st_mode & 0o777 == 0o600
     assert installed.model_path == model
@@ -107,7 +172,7 @@ def test_environment_resource_path_has_priority_over_saved_value(tmp_path, monke
     override.touch()
     config.save_resource_paths(tmp_path / "config/linguaforge", model_path=saved)
     monkeypatch.setenv("LINGUAFORGE_MODEL_PATH", str(override))
-    assert config.get_config(installed=True).model_path == override
+    assert config.get_config(installed=True, platform=linux).model_path == override
 
 
 def test_saved_resource_paths_reject_missing_or_relative_values(tmp_path):

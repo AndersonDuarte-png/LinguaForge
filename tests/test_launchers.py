@@ -15,6 +15,12 @@ import time
 import pytest
 
 
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Launchers Bash são integração Linux/POSIX.",
+)
+
+
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 
 
