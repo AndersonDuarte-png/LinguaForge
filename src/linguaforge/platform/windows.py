@@ -43,14 +43,19 @@ def valid_server_names() -> tuple[str, ...]:
     return ("llama-server.exe", "llama-server")
 
 
-def development_backend_dir(data_dir: Path) -> Path:
-    """Backend de desenvolvimento padrão no Windows (Vulkan)."""
-    return data_dir / "llama.cpp" / "b10978" / "win-vulkan-x64"
+def development_backend_dir(backends_root: Path) -> Path:
+    """Backend primário no Windows (Vulkan), relativo ao diretório de backends."""
+    return backends_root / "llama.cpp" / "b10978" / "win-vulkan-x64"
 
 
-def cpu_backend_dir(data_dir: Path) -> Path:
-    """Backend CPU de desenvolvimento, preservado para o fallback do W3-C."""
-    return data_dir / "llama.cpp" / "b10978" / "win-cpu-x64"
+def cpu_backend_dir(backends_root: Path) -> Path:
+    """Backend CPU de fallback no Windows, relativo ao diretório de backends."""
+    return backends_root / "llama.cpp" / "b10978" / "win-cpu-x64"
+
+
+def installed_backends_root(project_root: Path, data_dir: Path) -> Path:
+    """Raiz dos backends gerenciados quando installed=True (recursos da aplicação)."""
+    return project_root / "backends"
 
 
 def default_server_path(backend_dir: Path) -> Path:
@@ -63,11 +68,11 @@ def default_gpu_layers() -> str:
     return "999"
 
 
-def model_backends(data_dir: Path) -> tuple[ModelBackend, ...]:
+def model_backends(backends_root: Path) -> tuple[ModelBackend, ...]:
     """Candidatos gerenciados no Windows: Vulkan primário, CPU fallback."""
     return (
-        ModelBackend("vulkan", default_server_path(development_backend_dir(data_dir)), default_gpu_layers()),
-        ModelBackend("cpu", default_server_path(cpu_backend_dir(data_dir)), "0"),
+        ModelBackend("vulkan", default_server_path(development_backend_dir(backends_root)), default_gpu_layers()),
+        ModelBackend("cpu", default_server_path(cpu_backend_dir(backends_root)), "0"),
     )
 
 

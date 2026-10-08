@@ -20,6 +20,7 @@ class Config:
     config_dir: Path
     state_dir: Path
     backend_dir: Path
+    managed_backends_dir: Path
     model_path: Path
     llama_server_path: Path
     cuda_runtime_dir: Path
@@ -108,7 +109,13 @@ def save_resource_paths(
 
 
 def get_config(*, installed: bool | None = None, platform=None) -> Config:
-    """Resolve recursos somente de leitura e dados graváveis separadamente."""
+    """Resolve recursos somente de leitura e dados graváveis separadamente.
+
+    ``project_root`` é o application resource root: ``sys._MEIPASS`` quando
+    frozen, ou a raiz do repositório em desenvolvimento. Backends gerenciados,
+    frontend e demais recursos imutáveis ficam sob ele; dados e configuração do
+    usuário ficam em diretórios graváveis separados.
+    """
     if platform is None:
         platform = _platform_module
     frozen = bool(getattr(sys, "frozen", False))
@@ -124,6 +131,7 @@ def get_config(*, installed: bool | None = None, platform=None) -> Config:
         models_dir = data_dir / "models"
         backend_dir = data_dir / "backends" / "llama.cpp"
         server_fallback = backend_dir / "bin" / "llama-b10978" / "llama-server"
+        managed_backends_dir = platform.installed_backends_root(project_root, data_dir)
     else:
         data_dir = project_root / "data"
         models_dir = project_root / "models"
@@ -131,6 +139,7 @@ def get_config(*, installed: bool | None = None, platform=None) -> Config:
         state_dir = data_dir / "state"
         backend_dir = platform.development_backend_dir(data_dir)
         server_fallback = platform.default_server_path(backend_dir)
+        managed_backends_dir = data_dir
 
     saved_paths = _saved_resource_paths(config_dir) if installed else {}
     llama_server_is_explicit = bool(
@@ -145,6 +154,7 @@ def get_config(*, installed: bool | None = None, platform=None) -> Config:
         config_dir=config_dir,
         state_dir=state_dir,
         backend_dir=backend_dir,
+        managed_backends_dir=managed_backends_dir,
         model_path=_external_path(
             "LINGUAFORGE_MODEL_PATH",
             models_dir / "Qwen3-4B-Instruct-2507" / "Qwen3-4B-Instruct-2507-Q4_K_M.gguf",

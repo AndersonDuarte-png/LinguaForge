@@ -20,6 +20,7 @@ terminate_process = _implementation.terminate_process
 valid_server_names = _implementation.valid_server_names
 development_backend_dir = _implementation.development_backend_dir
 cpu_backend_dir = _implementation.cpu_backend_dir
+installed_backends_root = _implementation.installed_backends_root
 default_server_path = _implementation.default_server_path
 default_gpu_layers = _implementation.default_gpu_layers
 model_backends = _implementation.model_backends
@@ -33,6 +34,7 @@ __all__ = [
     "default_gpu_layers",
     "default_server_path",
     "development_backend_dir",
+    "installed_backends_root",
     "model_backends",
     "prepare_environment",
     "resolve_user_dirs",

@@ -80,6 +80,52 @@ def test_development_windows_backend_points_to_win_vulkan():
     cfg = config.get_config(installed=False, platform=windows)
     assert cfg.backend_dir == cfg.project_root / "data/llama.cpp/b10978/win-vulkan-x64"
     assert cfg.llama_server_path == cfg.backend_dir / "llama-server.exe"
+    assert cfg.managed_backends_dir == cfg.data_dir
+
+
+def test_windows_installed_backends_come_from_resource_root(tmp_path, monkeypatch):
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "local"))
+    monkeypatch.setenv("APPDATA", str(tmp_path / "roaming"))
+    cfg = config.get_config(installed=True, platform=windows)
+
+    assert cfg.managed_backends_dir == cfg.project_root / "backends"
+    assert cfg.data_dir == tmp_path / "local" / "LinguaForge"
+    assert cfg.config_dir == tmp_path / "roaming" / "LinguaForge"
+
+    backends = windows.model_backends(cfg.managed_backends_dir)
+    assert backends[0].name == "vulkan"
+    assert backends[0].server_path == cfg.project_root / "backends/llama.cpp/b10978/win-vulkan-x64/llama-server.exe"
+    assert backends[1].name == "cpu"
+    assert backends[1].server_path == cfg.project_root / "backends/llama.cpp/b10978/win-cpu-x64/llama-server.exe"
+    # dados graváveis não apontam para a raiz da aplicação
+    assert not cfg.data_dir.is_relative_to(cfg.project_root)
+
+
+def test_windows_frozen_resources_separate_from_user_data(tmp_path, monkeypatch):
+    bundle = tmp_path / "bundle/_internal"
+    monkeypatch.setattr(config.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(config.sys, "_MEIPASS", str(bundle), raising=False)
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "local"))
+    monkeypatch.setenv("APPDATA", str(tmp_path / "roaming"))
+    monkeypatch.chdir(tmp_path)
+    cfg = config.get_config(platform=windows)
+
+    assert cfg.frontend_dir == bundle / "frontend"
+    assert cfg.managed_backends_dir == bundle / "backends"
+    assert cfg.data_dir == tmp_path / "local" / "LinguaForge"
+    assert cfg.config_dir == tmp_path / "roaming" / "LinguaForge"
+    assert not cfg.data_dir.is_relative_to(cfg.project_root)
+
+
+def test_linux_installed_managed_backends_stay_in_data_dir(tmp_path, monkeypatch):
+    for variable, folder in [("XDG_DATA_HOME", "data"), ("XDG_CONFIG_HOME", "config"), ("XDG_STATE_HOME", "state")]:
+        monkeypatch.setenv(variable, str(tmp_path / folder))
+    cfg = config.get_config(installed=True, platform=linux)
+
+    assert cfg.managed_backends_dir == cfg.data_dir
+    backends = linux.model_backends(cfg.managed_backends_dir)
+    assert backends[0].name == "cuda"
+    assert backends[0].server_path == cfg.data_dir / "llama.cpp/b10978/cuda12.8/bin/llama-b10978/llama-server"
 
 
 def test_save_resource_paths_accepts_platform_server_name(tmp_path):

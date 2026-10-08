@@ -78,6 +78,16 @@ def test_windows_cpu_backend_dir_is_preserved():
     assert windows.cpu_backend_dir(data_dir) == data_dir / "llama.cpp" / "b10978" / "win-cpu-x64"
 
 
+def test_windows_installed_backends_root_is_app_backends():
+    project_root = Path("C:/app")
+    assert windows.installed_backends_root(project_root, Path("C:/users/x/AppData/Local/LinguaForge")) == project_root / "backends"
+
+
+def test_linux_installed_backends_root_preserves_data_dir():
+    data_dir = Path("/home/u/.local/share/linguaforge")
+    assert linux.installed_backends_root(Path("/opt/linguaforge"), data_dir) == data_dir
+
+
 def test_linux_cpu_backend_dir_matches_cuda_backend():
     data_dir = Path("/repo/data")
     assert linux.cpu_backend_dir(data_dir) == linux.development_backend_dir(data_dir)

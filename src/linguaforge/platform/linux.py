@@ -37,14 +37,19 @@ def valid_server_names() -> tuple[str, ...]:
     return ("llama-server",)
 
 
-def development_backend_dir(data_dir: Path) -> Path:
-    """Backend de desenvolvimento padrão no Linux (CUDA)."""
-    return data_dir / "llama.cpp" / "b10978" / "cuda12.8"
+def development_backend_dir(backends_root: Path) -> Path:
+    """Backend primário no Linux (CUDA), relativo ao diretório de backends."""
+    return backends_root / "llama.cpp" / "b10978" / "cuda12.8"
 
 
-def cpu_backend_dir(data_dir: Path) -> Path:
+def cpu_backend_dir(backends_root: Path) -> Path:
     """Backend para execução em CPU; no Linux o build CUDA também roda em CPU."""
-    return development_backend_dir(data_dir)
+    return development_backend_dir(backends_root)
+
+
+def installed_backends_root(project_root: Path, data_dir: Path) -> Path:
+    """Preserva o layout instalado Linux: backends gerenciados sob o data dir."""
+    return data_dir
 
 
 def default_server_path(backend_dir: Path) -> Path:
@@ -57,9 +62,9 @@ def default_gpu_layers() -> str:
     return "999"
 
 
-def model_backends(data_dir: Path) -> tuple[ModelBackend, ...]:
+def model_backends(backends_root: Path) -> tuple[ModelBackend, ...]:
     """Candidatos gerenciados: somente CUDA no Linux, sem fallback."""
-    return (ModelBackend("cuda", default_server_path(development_backend_dir(data_dir)), default_gpu_layers()),)
+    return (ModelBackend("cuda", default_server_path(development_backend_dir(backends_root)), default_gpu_layers()),)
 
 
 def prepare_environment(cuda_runtime_dir: Path, base_env: dict[str, str]) -> dict[str, str]:

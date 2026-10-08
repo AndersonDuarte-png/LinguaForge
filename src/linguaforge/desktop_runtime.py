@@ -162,7 +162,7 @@ def start_or_reuse_model(
         )
 
     failures: list[str] = []
-    for backend in platform.model_backends(config.data_dir):
+    for backend in platform.model_backends(config.managed_backends_dir):
         _logger.info("tentando backend %s", backend.name)
         try:
             managed = _start_backend(
